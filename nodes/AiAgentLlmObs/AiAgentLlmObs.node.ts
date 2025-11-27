@@ -142,13 +142,6 @@ export class AiAgentLlmObs implements INodeType {
 				default: 'openai',
 				description: 'The LLM provider to use',
 			},
-			// Credential placeholder - forces credential to appear here
-			{
-				displayName: '',
-				name: 'credentialNotice',
-				type: 'notice',
-				default: '',
-			},
 			// Model Configuration
 			{
 				displayName: 'Model',
@@ -298,7 +291,7 @@ export class AiAgentLlmObs implements INodeType {
 			},
 			// Model Options - placed right after model config, before prompt
 			{
-				displayName: 'Options',
+				displayName: 'Model Options',
 				name: 'modelOptions',
 				type: 'collection',
 				default: {},
