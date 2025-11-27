@@ -142,15 +142,7 @@ export class AiAgentLlmObs implements INodeType {
 			},
 		],
 		properties: [
-			// Langfuse Observability - at the top so credential appears first
-			{
-				displayName: 'Enable Langfuse Observability',
-				name: 'enableLangfuse',
-				type: 'boolean',
-				default: false,
-				description: 'Whether to enable Langfuse tracing for this agent',
-			},
-			// LLM Provider Selection
+			// LLM Provider Selection - MUST be first
 			{
 				displayName: 'LLM Provider',
 				name: 'provider',
@@ -160,6 +152,14 @@ export class AiAgentLlmObs implements INodeType {
 				options: LLM_PROVIDERS,
 				default: 'openai',
 				description: 'The LLM provider to use',
+			},
+			// Langfuse Observability
+			{
+				displayName: 'Enable Langfuse Observability',
+				name: 'enableLangfuse',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to enable Langfuse tracing for this agent',
 			},
 			// Model Configuration
 			{
