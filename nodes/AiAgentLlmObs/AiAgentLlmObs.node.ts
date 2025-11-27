@@ -824,23 +824,23 @@ export class AiAgentLlmObs implements INodeType {
 									// Don't pass Langfuse callbacks to tools - it creates duplicate traces
 									const toolResult = await tool.invoke(toolArgs);
 
-									intermediateSteps.push({
-										action: { tool: toolName, toolInput: toolArgs },
-										observation: toolResult,
-									});
-
-									// Format tool result for cleaner display
+									// Format tool result for cleaner display - extract text content
 									let formattedResult: string;
-									if (typeof toolResult === 'string') {
+									const rawType = typeof toolResult;
+									const isArray = Array.isArray(toolResult);
+									const hasContent = toolResult?.content && Array.isArray(toolResult.content);
+
+									if (rawType === 'string') {
 										formattedResult = toolResult;
-									} else if (Array.isArray(toolResult)) {
-										// Handle array of documents
+									} else if (isArray) {
+										// Handle array of documents or content blocks
 										formattedResult = toolResult.map((item: any) => {
 											if (item?.pageContent) return item.pageContent;
 											if (item?.text?.pageContent) return item.text.pageContent;
+											if (typeof item?.text === 'string') return item.text;
 											return typeof item === 'string' ? item : JSON.stringify(item);
 										}).join('\n\n---\n\n');
-									} else if (toolResult?.content && Array.isArray(toolResult.content)) {
+									} else if (hasContent) {
 										// Handle {content: [{type: "text", text: {pageContent: ...}}]} format
 										formattedResult = toolResult.content.map((item: any) => {
 											if (item?.text?.pageContent) return item.text.pageContent;
@@ -853,6 +853,17 @@ export class AiAgentLlmObs implements INodeType {
 									} else {
 										formattedResult = JSON.stringify(toolResult);
 									}
+
+									intermediateSteps.push({
+										action: { tool: toolName, toolInput: toolArgs },
+										observation: formattedResult,
+										_debug: {
+											rawType,
+											isArray,
+											hasContent,
+											rawToolResult: JSON.stringify(toolResult).substring(0, 500),
+										},
+									});
 
 									currentMessages.push(new ToolMessage({
 										content: formattedResult,
@@ -922,14 +933,9 @@ export class AiAgentLlmObs implements INodeType {
 					output: outputContent,
 				};
 
-				if (agentOptions.returnIntermediateSteps && intermediateSteps.length > 0) {
+				// Always include intermediate steps for debugging tool results
+				if (intermediateSteps.length > 0) {
 					outputJson.intermediateSteps = intermediateSteps;
-				}
-
-				// Add debug info about tools (temporary for debugging)
-				if (toolsDebugInfo.length > 0) {
-					outputJson._toolsDetected = toolsDebugInfo;
-					outputJson._toolBindingDebug = toolBindingDebug;
 				}
 
 				// Flush Langfuse to ensure traces are sent
