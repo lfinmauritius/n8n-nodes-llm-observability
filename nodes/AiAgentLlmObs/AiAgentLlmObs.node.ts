@@ -786,8 +786,16 @@ export class AiAgentLlmObs implements INodeType {
 				let response: any;
 				const intermediateSteps: any[] = [];
 
+				// Debug info for tool binding
+				let toolBindingDebug: any = {};
+
 				if (tools && tools.length > 0) {
-					const modelWithTools = activeModel.bindTools?.(tools) || activeModel;
+					const hasBindTools = typeof activeModel.bindTools === 'function';
+					toolBindingDebug.hasBindTools = hasBindTools;
+
+					const modelWithTools = hasBindTools ? activeModel.bindTools!(tools) : activeModel;
+					toolBindingDebug.boundTools = hasBindTools;
+
 					const currentMessages = [...messages];
 					let iterations = 0;
 					const maxIterations = agentOptions.maxIterations || 10;
@@ -798,6 +806,12 @@ export class AiAgentLlmObs implements INodeType {
 						currentMessages.push(aiResponse);
 
 						const toolCalls = aiResponse.tool_calls || (aiResponse as any).additional_kwargs?.tool_calls;
+
+						// Debug: capture tool_calls info
+						toolBindingDebug.iteration = iterations;
+						toolBindingDebug.hasToolCalls = !!toolCalls;
+						toolBindingDebug.toolCallsCount = toolCalls?.length || 0;
+						toolBindingDebug.rawToolCalls = toolCalls;
 
 						if (!toolCalls || toolCalls.length === 0) {
 							response = aiResponse;
@@ -876,6 +890,7 @@ export class AiAgentLlmObs implements INodeType {
 				// Add debug info about tools (temporary for debugging)
 				if (toolsDebugInfo.length > 0) {
 					outputJson._toolsDetected = toolsDebugInfo;
+					outputJson._toolBindingDebug = toolBindingDebug;
 				}
 
 				// Flush Langfuse to ensure traces are sent
