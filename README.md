@@ -1,145 +1,165 @@
-# n8n-nodes-openai-langfuse
+# n8n-nodes-llm-observability
 
-> This project is proudly developed and maintained by **Wistron DXLab**. <br><br>
-> ⚡Update: This is the new [**n8n-nodes-ai-agent-langfuse**](https://github.com/rorubyy/n8n-nodes-ai-agent-langfuse)
- project, an upgraded version with Agent integration and enhanced structured tracing support.
-![new-node-example](https://github.com/rorubyy/n8n-nodes-openai-langfuse/blob/main/assets/new-node-example.png?raw=true)
+> **Developed and maintained by [Ascenzia](https://ascenzia.fr)**
+>
+> Based on the original work by **Ruby Lo** (Wistron DXLab) - [n8n-nodes-openai-langfuse](https://github.com/rorubyy/n8n-nodes-openai-langfuse)
 
-npm package: [https://www.npmjs.com/package/n8n-nodes-openai-langfuse](https://www.npmjs.com/package/n8n-nodes-openai-langfuse)
+npm package: [https://www.npmjs.com/package/n8n-nodes-llm-observability](https://www.npmjs.com/package/n8n-nodes-llm-observability)
 
 ## Features
 
-- Support for OpenAI-compatible chat models (e.g., `gpt-4.1-mini`, `gpt-4o`)
-- Automatic Langfuse tracing for every request and response
+This package provides **pure LLM nodes** for all major providers, with **modular observability** support:
+
+### Supported LLM Providers
+- OpenAI (GPT-4, GPT-4o, etc.)
+- Anthropic (Claude 3, Claude 3.5, etc.)
+- Azure OpenAI
+- Google Gemini
+- AWS Bedrock
+- Groq
+- Mistral AI
+- Ollama
+- Cohere
+- vLLM
+
+### Modular Architecture
+- **Pure LLM nodes**: Use any LLM provider without observability overhead
+- **Observability sub-nodes**: Add tracing as a separate layer
+  - Langfuse (included)
+  - More coming soon (LangSmith, Phoenix, Helicone...)
+
+### Key Benefits
+- Automatic tracing for every request and response
 - Custom metadata injection: `sessionId`, `userId`, and structured JSON
+- Decoupled architecture: choose your LLM and observability independently
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
-[Installation](#installation)  
-[Credentials](#credentials)  <!-- delete if no auth needed -->  
-[Operations](#operations)  
-[Compatibility](#compatibility)  
-[Usage](#usage)  <!-- delete if not using this section -->  
-[Resources](#resources)  
-[Version history](#version-history)  <!-- delete if not using this section -->  
+## Table of Contents
+
+- [Installation](#installation)
+- [Architecture](#architecture)
+- [Credentials](#credentials)
+- [Usage](#usage)
+- [Compatibility](#compatibility)
+- [Resources](#resources)
+- [Version History](#version-history)
 
 ## Installation
+
 Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the official n8n documentation for community nodes.
 
 ### Community Nodes (Recommended)
 For **n8n v0.187+**, install directly from the UI:
 1. Go to Settings → Community Nodes
 2. Click **Install**
-3. Enter `n8n-nodes-openai-langfuse` in Enter npm package name
+3. Enter `n8n-nodes-llm-observability` in the package name field
 4. Agree to the risks of using community nodes
 5. Select Install
 
-### Docker Installation (Recommended for Production)
-A preconfigured Docker setup is available in the `docker/` directory:
-
-1. Clone the repository and navigate to the docker/ directory
-    ```bash
-    git clone https://github.com/rorubyy/n8n-nodes-openai-langfuse.git
-    cd n8n-nodes-openai-langfuse/docker
-    ```
-2. Build the Docker image
-    ```bash
-    docker build -t n8n-openai-langfuse .
-    ```
-3. Run the container
-    ```bash
-    docker run -it -p 5678:5678 n8n-openai-langfuse
-    ```
-You can now access n8n at http://localhost:5678
-
 ### Manual Installation
-For a standard installation without Docker:
 ```bash
-# Go to your n8n installation directory
-cd ~/.n8n 
-# Install the node
-npm install n8n-nodes-openai-langfuse
-# Restart n8n to apply the node
+cd ~/.n8n
+npm install n8n-nodes-llm-observability
 n8n start
 ```
-## Credential 
 
-This credential is used to:
-- Authenticate your OpenAI-compatible LLM endpoint
-- Enable Langfuse tracing, by sending structured request/response logs to your Langfuse instance
-### OpenAI Settings
-|Field Name|Description|Example|
-|-----|-----|-----|
-|OpenAI API Key|Your API key for accessing the OpenAI-compatible endpoint|`sk-abc123...`|
-OpenAI Organization ID|(Optional) Your OpenAI organization ID, if required|`org-xyz789`|
-|OpenAI Base URL|Full URL to your OpenAI-compatible endpoint|default: `https://api.openai.com/v1`|
-### Langfuse Settings
-|Field Name|Description|Example|
-|-----|-----|-----|
-Langfuse Base URL|The base URL of your Langfuse instance|`https://cloud.langfuse.com` or self-hosted URL|
-|Langfuse Public Key *|Langfuse public key used for tracing authentication|`pk-xxx`|
-Langfuse Secret Key *|Langfuse secret key used for tracing authentication|`sk-xxx`|
+## Architecture
 
-> 🔑 How to find your Langfuse keys: <br>
-> Log in to your Langfuse dashboard, then go to: <br>
-> Settings → Projects → [Your Project] to retrieve publicKey and secretKey.
+### Pure LLM Nodes
+Use LLM nodes directly without any observability:
 
-### Credential UI Preview
-Once filled out, your credential should look like this:
+```
+[LLM Node] → [AI Agent]
+```
 
-![credentials-example](https://github.com/rorubyy/n8n-nodes-openai-langfuse/blob/main/assets/credential-example.png?raw=true)
-✅ After saving the credential, you're ready to use the node and see traces in your Langfuse dashboard.
+Available nodes:
+- LM Chat OpenAI
+- LM Chat Anthropic
+- LM Chat Azure OpenAI
+- LM Chat Google Gemini
+- LM Chat AWS Bedrock
+- LM Chat Groq
+- LM Chat Mistral
+- LM Chat Ollama
+- LM Chat Cohere
+- LM Chat vLLM
 
-## Operations
+### With Observability
+Add observability by connecting through the Observability sub-node:
 
-This node lets you inject Langfuse-compatible metadata into your OpenAI requests.  
-You can trace every run with context such as `sessionId`, `userId`, and any custom metadata.
+```
+[LLM Node] → [Observability Langfuse] → [AI Agent]
+```
 
----
-### Supported Fields
+The observability node intercepts LLM calls and sends traces to your observability platform.
+
+### Legacy Nodes (Backward Compatibility)
+The original integrated nodes are still available:
+- LM Chat OpenAI Langfuse
+- LM Chat Anthropic Langfuse
+- etc.
+
+## Credentials
+
+### Pure LLM Credentials
+Each provider has its own credential type:
+
+| Provider | Credential Name |
+|----------|-----------------|
+| OpenAI | OpenAI API |
+| Anthropic | Anthropic API |
+| Azure OpenAI | Azure OpenAI API |
+| Google Gemini | Google Gemini API |
+| AWS Bedrock | AWS Bedrock API |
+| Groq | Groq API |
+| Mistral | Mistral API |
+| Ollama | Ollama API |
+| Cohere | Cohere API |
+| vLLM | vLLM API |
+
+### Langfuse Credential
+For the Observability Langfuse node:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| Base URL | Langfuse instance URL | `https://cloud.langfuse.com` |
+| Public Key | Langfuse public key | `pk-xxx` |
+| Secret Key | Langfuse secret key | `sk-xxx` |
+
+> To find your Langfuse keys: Log in to your Langfuse dashboard → Settings → Projects → [Your Project]
+
+## Usage
+
+### Example: OpenAI with Langfuse Observability
+
+1. Add an **LM Chat OpenAI** node
+2. Connect it to an **Observability Langfuse** node
+3. Connect the observability node to your **AI Agent**
+
+The Langfuse node supports metadata injection:
 
 | Field | Type | Description |
-|----------|----------|----------|
-| `sessionId` | `string` | Logical session ID to group related runs |
-| `userId` | `string` | ID representing the end user making the request |
-| `metadata` | `object` | Custom JSON object with additional context (e.g., workflowId, env) |
+|-------|------|-------------|
+| `sessionId` | string | Group related runs |
+| `userId` | string | Identify the end user |
+| `metadata` | object | Custom JSON context |
 
-![langfuse-metadata-example](https://github.com/rorubyy/n8n-nodes-openai-langfuse/blob/main/assets/langfuse-metadata-example.png?raw=true)
----
-### 🧪 Example Setup
-| Input Field | Example Value |
-|----------|----------|
-| Session ID | `{{$json.sessionId}}`|
-| User ID | `test` |	
-Custom Metadata (JSON)
+### Example Metadata
 ```json
 {
-  "project": "test-project",
-  "env": "dev",
-  "workflow": "main-flow"
+  "project": "my-project",
+  "env": "production",
+  "workflow": "customer-support"
 }
 ```
----
-### Visual Example
-1. **Node Configuration UI**: This shows a sample n8n workflow using the Langfuse Chat Node.
-
-![node-example](https://github.com/rorubyy/n8n-nodes-openai-langfuse/blob/main/assets/node-example.png?raw=true)
-
-2. **Workflow Setup**: A typical workflow using this node.
-
-![workflow-example](https://github.com/rorubyy/n8n-nodes-openai-langfuse/blob/main/assets/workflow-example.png?raw=true)
-
-3. **Langfuse Trace Output**
-Here’s how traces appear inside the Langfuse dashboard.
-
-![langfuse-example](https://github.com/rorubyy/n8n-nodes-openai-langfuse/blob/main/assets/langfuse-example.png?raw=true)
-
 
 ## Compatibility
+
 - Requires n8n version 1.0.0 or later
+- Node.js >= 20.15
 - Compatible with:
-  - OpenAI official API (https://api.openai.com)
-  - Any OpenAI-compatible LLM (e.g. via LiteLLM, LocalAI, Azure OpenAI)
+  - All listed LLM providers
   - Langfuse Cloud and self-hosted instances
 
 ## Resources
@@ -147,11 +167,20 @@ Here’s how traces appear inside the Langfuse dashboard.
 - [n8n Community Node Docs](https://docs.n8n.io/integrations/community-nodes/)
 - [Langfuse Documentation](https://docs.langfuse.com/)
 - [n8n Community Forum](https://community.n8n.io/)
-- [Langfuse GitHub](https://github.com/langfuse/langfuse)
+- [Ascenzia](https://ascenzia.fr)
 
 ## Version History
 
-- **v1.0** – Initial release with OpenAI + Langfuse integration
+- **v0.3.0** – Modular architecture: pure LLM nodes + separate observability layer
+- **v0.2.x** – Multi-provider support with integrated Langfuse
+- **v0.1.x** – Initial release (OpenAI + Langfuse)
 
 ## License
-MIT © 2025 Wistron DXLab  
+
+MIT
+
+---
+
+**Original project**: [n8n-nodes-openai-langfuse](https://github.com/rorubyy/n8n-nodes-openai-langfuse) by Ruby Lo (Wistron DXLab)
+
+**Extended and maintained by**: [Ascenzia](https://ascenzia.fr)

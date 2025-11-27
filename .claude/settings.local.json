@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.github.com)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(find:*)",
+      "Bash(xargs ls:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc)",
+      "Bash(npm install)",
+      "Bash(npx typescript:*)",
+      "Bash(node_modules.bintsc:*)",
+      "Bash(node ./node_modules/typescript/bin/tsc:*)",
+      "Bash(node:*)",
+      "WebFetch(domain:docs.n8n.io)",
+      "Bash(copy \"D:\\Téléchargement\\n8n-nodes-llm-observability\\nodes\\LmChatVllm\\LmChatVllmLight.icon.svg\" \"D:\\Téléchargement\\n8n-nodes-llm-observability\\nodes\\LmChatVllmLangfuse\\LmChatVllmLangfuseLight.icon.svg\")",
+      "Bash(copy \"D:\\Téléchargement\\n8n-nodes-llm-observability\\nodes\\LmChatVllm\\LmChatVllmDark.icon.svg\" \"D:\\Téléchargement\\n8n-nodes-llm-observability\\nodes\\LmChatVllmLangfuse\\LmChatVllmLangfuseDark.icon.svg\")",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
