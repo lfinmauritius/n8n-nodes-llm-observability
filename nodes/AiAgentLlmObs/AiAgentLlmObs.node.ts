@@ -647,10 +647,22 @@ export class AiAgentLlmObs implements INodeType {
 				}
 
 				// Get optional connections
-				const tools = (await this.getInputConnectionData(
+				const rawTools = await this.getInputConnectionData(
 					'ai_tool' as any,
 					itemIndex,
-				)) as Tool[] | undefined;
+				);
+				// Normalize tools - they can come as array, single tool, or wrapped in { response: Tool }
+				let tools: Tool[] | undefined;
+				if (rawTools) {
+					const toolArray = Array.isArray(rawTools) ? rawTools : [rawTools];
+					tools = toolArray.flatMap((t: any) => {
+						// Handle { response: Tool } format from supplyData
+						if (t && typeof t === 'object' && 'response' in t) {
+							return t.response;
+						}
+						return t;
+					}).filter((t): t is Tool => t != null);
+				}
 
 				const memory = (await this.getInputConnectionData(
 					'ai_memory' as any,
