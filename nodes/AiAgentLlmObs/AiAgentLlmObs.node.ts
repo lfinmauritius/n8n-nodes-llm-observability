@@ -717,6 +717,22 @@ export class AiAgentLlmObs implements INodeType {
 				const useLangfuse = this.getNodeParameter('useLangfuse', itemIndex, 'no') as string;
 				let langfuseCallbacks: any[] = [];
 
+				// Map provider to LangChain class name for Langfuse
+				const providerToClassName: Record<string, string> = {
+					openai: 'ChatOpenAI',
+					anthropic: 'ChatAnthropic',
+					azureOpenai: 'AzureChatOpenAI',
+					gemini: 'ChatGoogleGenerativeAI',
+					bedrock: 'ChatBedrockConverse',
+					groq: 'ChatGroq',
+					mistral: 'ChatMistralAI',
+					ollama: 'ChatOllama',
+					grok: 'ChatOpenAI (xAI)',
+					vllm: 'ChatOpenAI (vLLM)',
+					openaiCompatible: 'ChatOpenAI (Compatible)',
+				};
+				const llmClassName = providerToClassName[provider] || provider;
+
 				if (useLangfuse === 'yes') {
 					const langfuseCredentials = await this.getCredentials('langfuseObsApi');
 					let customMetadata: Record<string, any> = {};
@@ -746,6 +762,7 @@ export class AiAgentLlmObs implements INodeType {
 							...customMetadata,
 							model: modelName,
 							provider: provider,
+							llmClass: llmClassName,
 						},
 						tags,
 					});
@@ -781,8 +798,10 @@ export class AiAgentLlmObs implements INodeType {
 				// Debug info for tool binding
 				let toolBindingDebug: any = {};
 
-				// Invoke options with Langfuse callbacks
-				const invokeOptions = langfuseCallbacks.length > 0 ? { callbacks: langfuseCallbacks } : undefined;
+				// Invoke options with Langfuse callbacks and correct run name
+				const invokeOptions = langfuseCallbacks.length > 0
+					? { callbacks: langfuseCallbacks, runName: llmClassName }
+					: undefined;
 
 				if (tools && tools.length > 0) {
 					const hasBindTools = typeof model.bindTools === 'function';
