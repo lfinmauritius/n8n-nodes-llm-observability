@@ -824,45 +824,48 @@ export class AiAgentLlmObs implements INodeType {
 									// Don't pass Langfuse callbacks to tools - it creates duplicate traces
 									const toolResult = await tool.invoke(toolArgs);
 
-									// Format tool result for cleaner display - extract text content
-									let formattedResult: string;
-									const rawType = typeof toolResult;
-									const isArray = Array.isArray(toolResult);
-									const hasContent = toolResult?.content && Array.isArray(toolResult.content);
+									// Helper to extract pageContent from various formats
+									const extractContent = (data: any): string => {
+										// If it's a string, try to parse as JSON
+										if (typeof data === 'string') {
+											try {
+												const parsed = JSON.parse(data);
+												return extractContent(parsed);
+											} catch {
+												// Not JSON, return as-is
+												return data;
+											}
+										}
 
-									if (rawType === 'string') {
-										formattedResult = toolResult;
-									} else if (isArray) {
-										// Handle array of documents or content blocks
-										formattedResult = toolResult.map((item: any) => {
-											if (item?.pageContent) return item.pageContent;
-											if (item?.text?.pageContent) return item.text.pageContent;
-											if (typeof item?.text === 'string') return item.text;
-											return typeof item === 'string' ? item : JSON.stringify(item);
-										}).join('\n\n---\n\n');
-									} else if (hasContent) {
-										// Handle {content: [{type: "text", text: {pageContent: ...}}]} format
-										formattedResult = toolResult.content.map((item: any) => {
-											if (item?.text?.pageContent) return item.text.pageContent;
-											if (item?.pageContent) return item.pageContent;
-											if (typeof item?.text === 'string') return item.text;
-											return typeof item === 'string' ? item : JSON.stringify(item);
-										}).join('\n\n---\n\n');
-									} else if (toolResult?.pageContent) {
-										formattedResult = toolResult.pageContent;
-									} else {
-										formattedResult = JSON.stringify(toolResult);
-									}
+										// If it's an array, extract from each item
+										if (Array.isArray(data)) {
+											return data.map((item: any) => extractContent(item)).join('\n\n---\n\n');
+										}
+
+										// If it has pageContent directly
+										if (data?.pageContent) {
+											return data.pageContent;
+										}
+
+										// If it has text property (content block format)
+										if (data?.text) {
+											return extractContent(data.text);
+										}
+
+										// If it has content array
+										if (data?.content && Array.isArray(data.content)) {
+											return data.content.map((item: any) => extractContent(item)).join('\n\n---\n\n');
+										}
+
+										// Fallback: stringify if object
+										return typeof data === 'object' ? JSON.stringify(data) : String(data);
+									};
+
+									const formattedResult = extractContent(toolResult);
 
 									intermediateSteps.push({
 										action: { tool: toolName, toolInput: toolArgs },
 										observation: formattedResult,
-										_debug: {
-											rawType,
-											isArray,
-											hasContent,
-											rawToolResult: JSON.stringify(toolResult).substring(0, 500),
-										},
 									});
 
 									currentMessages.push(new ToolMessage({
