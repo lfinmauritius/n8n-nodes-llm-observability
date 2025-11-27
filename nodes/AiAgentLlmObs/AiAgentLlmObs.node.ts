@@ -524,10 +524,15 @@ export class AiAgentLlmObs implements INodeType {
 					case 'azureOpenai': {
 						const credentials = await this.getCredentials('azureOpenAiApi');
 						const { AzureChatOpenAI } = await import('@langchain/openai');
+						// Support both resourceName (instance name) and endpoint (full URL)
+						const endpoint = credentials.endpoint as string || credentials.resourceName as string;
+						const isFullUrl = endpoint?.startsWith('http');
 						model = new AzureChatOpenAI({
 							azureOpenAIApiKey: credentials.apiKey as string,
 							azureOpenAIApiDeploymentName: modelName,
-							azureOpenAIApiInstanceName: credentials.resourceName as string,
+							...(isFullUrl
+								? { azureOpenAIEndpoint: endpoint }
+								: { azureOpenAIApiInstanceName: endpoint }),
 							azureOpenAIApiVersion: (credentials.apiVersion as string) || '2024-02-15-preview',
 							temperature: modelOptions.temperature ?? 0.7,
 							maxTokens: modelOptions.maxTokens ?? 4096,
