@@ -1,12 +1,18 @@
 {
   "name": "n8n-nodes-llm-observability",
-  "version": "0.7.0",
-  "description": "n8n community nodes: AI Agent with integrated Langfuse observability + vLLM chat model",
+  "version": "0.8.5",
+  "description": "n8n community nodes: Standalone AI Agent with multi-provider LLM support and integrated Langfuse observability",
   "keywords": [
     "n8n-community-node-package",
     "ai-agent",
     "langfuse",
     "langchain",
+    "openai",
+    "anthropic",
+    "gemini",
+    "groq",
+    "mistral",
+    "ollama",
     "vllm",
     "observability",
     "tracing"
@@ -43,12 +49,17 @@
       "dist/credentials/VllmApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/AiAgentLlmObs/AiAgentLlmObs.node.js",
-      "dist/nodes/LmChatVllm/LmChatVllm.node.js"
+      "dist/nodes/AiAgentLlmObs/AiAgentLlmObs.node.js"
     ]
   },
   "dependencies": {
+    "@langchain/anthropic": "^0.3.20",
+    "@langchain/aws": "^0.1.12",
     "@langchain/core": "^0.3.72",
+    "@langchain/google-genai": "^0.2.9",
+    "@langchain/groq": "^0.2.4",
+    "@langchain/mistralai": "^0.2.3",
+    "@langchain/ollama": "^0.2.4",
     "@langchain/openai": "^0.6.9",
     "langfuse-langchain": "^3.0.0"
   },
