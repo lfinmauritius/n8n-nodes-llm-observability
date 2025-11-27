@@ -77,7 +77,8 @@ export class AiAgentLlmObs implements INodeType {
 			{
 				name: 'langfuseObsApi',
 				displayName: 'Langfuse Credential',
-				required: false,
+				required: true,
+				displayOptions: { show: { useLangfuse: ['yes'] } },
 			},
 			{
 				name: 'openAiApi',
@@ -141,7 +142,26 @@ export class AiAgentLlmObs implements INodeType {
 			},
 		],
 		properties: [
-			// LLM Provider Selection - MUST be first
+			// Langfuse toggle - must be first for credential displayOptions
+			{
+				displayName: 'Use Langfuse Observability',
+				name: 'useLangfuse',
+				type: 'options',
+				noDataExpression: true,
+				options: [
+					{
+						name: 'No',
+						value: 'no',
+					},
+					{
+						name: 'Yes',
+						value: 'yes',
+					},
+				],
+				default: 'no',
+				description: 'Enable Langfuse tracing for this agent',
+			},
+			// LLM Provider Selection
 			{
 				displayName: 'LLM Provider',
 				name: 'provider',
@@ -381,13 +401,18 @@ export class AiAgentLlmObs implements INodeType {
 					},
 				},
 			},
-			// Langfuse Options (tracing enabled when credential is configured)
+			// Langfuse Options
 			{
 				displayName: 'Langfuse Options',
 				name: 'langfuseOptions',
 				type: 'collection',
 				default: {},
 				placeholder: 'Add Option',
+				displayOptions: {
+					show: {
+						useLangfuse: ['yes'],
+					},
+				},
 				options: [
 					{
 						displayName: 'Custom Metadata (JSON)',
@@ -657,18 +682,12 @@ export class AiAgentLlmObs implements INodeType {
 					returnIntermediateSteps?: boolean;
 				};
 
-				// Prepare the model with Langfuse if credentials are configured
+				// Prepare the model with Langfuse if enabled
 				let activeModel = model;
+				const useLangfuse = this.getNodeParameter('useLangfuse', itemIndex, 'no') as string;
 
-				// Try to get Langfuse credentials (optional - tracing enabled when configured)
-				let langfuseCredentials: any = null;
-				try {
-					langfuseCredentials = await this.getCredentials('langfuseObsApi');
-				} catch {
-					// No Langfuse credentials configured, continue without tracing
-				}
-
-				if (langfuseCredentials) {
+				if (useLangfuse === 'yes') {
+					const langfuseCredentials = await this.getCredentials('langfuseObsApi');
 					let customMetadata: Record<string, any> = {};
 					if (typeof langfuseOptions.customMetadata === 'string') {
 						try {
