@@ -76,69 +76,70 @@ export class AiAgentLlmObs implements INodeType {
 		outputs: ['main' as any],
 		credentials: [
 			{
-				name: 'openAiApi',
-				displayName: 'OpenAI Credential',
+				name: 'openAiLangfuseApi',
+				displayName: 'OpenAI + Langfuse API',
 				required: true,
-				displayOptions: { show: { provider: ['openai', 'openaiCompatible'] } },
+				displayOptions: { show: { provider: ['openai'] } },
 			},
 			{
-				name: 'anthropicApi',
-				displayName: 'Anthropic Credential',
+				name: 'anthropicLangfuseApi',
+				displayName: 'Anthropic + Langfuse API',
 				required: true,
 				displayOptions: { show: { provider: ['anthropic'] } },
 			},
 			{
-				name: 'azureOpenAiApi',
-				displayName: 'Azure OpenAI Credential',
+				name: 'azureOpenAiLangfuseApi',
+				displayName: 'Azure OpenAI + Langfuse API',
 				required: true,
 				displayOptions: { show: { provider: ['azureOpenai'] } },
 			},
 			{
-				name: 'googlePalmApi',
-				displayName: 'Google Gemini Credential',
+				name: 'geminiLangfuseApi',
+				displayName: 'Google Gemini + Langfuse API',
 				required: true,
 				displayOptions: { show: { provider: ['gemini'] } },
 			},
 			{
-				name: 'awsApi',
-				displayName: 'AWS Bedrock Credential',
+				name: 'bedrockLangfuseApi',
+				displayName: 'AWS Bedrock + Langfuse API',
 				required: true,
 				displayOptions: { show: { provider: ['bedrock'] } },
 			},
 			{
-				name: 'groqApi',
-				displayName: 'Groq Credential',
+				name: 'groqLangfuseApi',
+				displayName: 'Groq + Langfuse API',
 				required: true,
 				displayOptions: { show: { provider: ['groq'] } },
 			},
 			{
-				name: 'mistralCloudApi',
-				displayName: 'Mistral Credential',
+				name: 'mistralLangfuseApi',
+				displayName: 'Mistral + Langfuse API',
 				required: true,
 				displayOptions: { show: { provider: ['mistral'] } },
 			},
 			{
-				name: 'ollamaApi',
-				displayName: 'Ollama Credential',
+				name: 'ollamaLangfuseApi',
+				displayName: 'Ollama + Langfuse API',
 				required: true,
 				displayOptions: { show: { provider: ['ollama'] } },
 			},
 			{
-				name: 'xAiApi',
-				displayName: 'xAI Grok Credential',
+				name: 'grokLangfuseApi',
+				displayName: 'xAI Grok + Langfuse API',
 				required: true,
 				displayOptions: { show: { provider: ['grok'] } },
 			},
 			{
-				name: 'vllmApi',
-				displayName: 'vLLM Credential',
+				name: 'vllmLangfuseApi',
+				displayName: 'vLLM + Langfuse API',
 				required: true,
 				displayOptions: { show: { provider: ['vllm'] } },
 			},
 			{
-				name: 'langfuseObsApi',
-				displayName: 'Langfuse Observability',
+				name: 'openAiCompatibleLangfuseApi',
+				displayName: 'OpenAI Compatible + Langfuse API',
 				required: true,
+				displayOptions: { show: { provider: ['openaiCompatible'] } },
 			},
 		],
 		properties: [
@@ -472,12 +473,34 @@ export class AiAgentLlmObs implements INodeType {
 					topP?: number;
 				};
 
+				// Map provider to credential name
+				const providerToCredential: Record<string, string> = {
+					openai: 'openAiLangfuseApi',
+					anthropic: 'anthropicLangfuseApi',
+					azureOpenai: 'azureOpenAiLangfuseApi',
+					gemini: 'geminiLangfuseApi',
+					bedrock: 'bedrockLangfuseApi',
+					groq: 'groqLangfuseApi',
+					mistral: 'mistralLangfuseApi',
+					ollama: 'ollamaLangfuseApi',
+					grok: 'grokLangfuseApi',
+					vllm: 'vllmLangfuseApi',
+					openaiCompatible: 'openAiCompatibleLangfuseApi',
+				};
+
+				const credentialName = providerToCredential[provider];
+				if (!credentialName) {
+					throw new NodeOperationError(this.getNode(), `Unknown provider: ${provider}`, { itemIndex });
+				}
+
+				// Get combined credentials (LLM + Langfuse)
+				const credentials = await this.getCredentials(credentialName);
+
 				// Create the model based on provider
 				let model: BaseChatModel;
 
 				switch (provider) {
 					case 'openai': {
-						const credentials = await this.getCredentials('openAiApi');
 						model = new ChatOpenAI({
 							apiKey: credentials.apiKey as string,
 							model: modelName,
@@ -489,7 +512,6 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'anthropic': {
-						const credentials = await this.getCredentials('anthropicApi');
 						const { ChatAnthropic } = await import('@langchain/anthropic');
 						model = new ChatAnthropic({
 							anthropicApiKey: credentials.apiKey as string,
@@ -501,15 +523,13 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'azureOpenai': {
-						const credentials = await this.getCredentials('azureOpenAiApi');
 						const { AzureChatOpenAI } = await import('@langchain/openai');
-						// Support both resourceName (instance name) and endpoint (full URL)
-						const endpoint = credentials.endpoint as string || credentials.resourceName as string;
+						const endpoint = credentials.endpoint as string;
 						const isFullUrl = endpoint?.startsWith('http');
 						model = new AzureChatOpenAI({
 							azureOpenAIApiKey: credentials.apiKey as string,
 							azureOpenAIApiDeploymentName: modelName,
-							modelName: modelName, // Force correct model name for Langfuse tracing
+							modelName: modelName,
 							...(isFullUrl
 								? { azureOpenAIEndpoint: endpoint }
 								: { azureOpenAIApiInstanceName: endpoint }),
@@ -521,7 +541,6 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'gemini': {
-						const credentials = await this.getCredentials('googlePalmApi');
 						const { ChatGoogleGenerativeAI } = await import('@langchain/google-genai');
 						model = new ChatGoogleGenerativeAI({
 							apiKey: credentials.apiKey as string,
@@ -533,7 +552,6 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'bedrock': {
-						const credentials = await this.getCredentials('awsApi');
 						const { ChatBedrockConverse } = await import('@langchain/aws');
 						model = new ChatBedrockConverse({
 							model: modelName,
@@ -549,7 +567,6 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'groq': {
-						const credentials = await this.getCredentials('groqApi');
 						const { ChatGroq } = await import('@langchain/groq');
 						model = new ChatGroq({
 							apiKey: credentials.apiKey as string,
@@ -560,7 +577,6 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'mistral': {
-						const credentials = await this.getCredentials('mistralCloudApi');
 						const { ChatMistralAI } = await import('@langchain/mistralai');
 						model = new ChatMistralAI({
 							apiKey: credentials.apiKey as string,
@@ -572,7 +588,6 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'ollama': {
-						const credentials = await this.getCredentials('ollamaApi');
 						const { ChatOllama } = await import('@langchain/ollama');
 						model = new ChatOllama({
 							baseUrl: credentials.baseUrl as string,
@@ -582,7 +597,6 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'grok': {
-						const credentials = await this.getCredentials('xAiApi');
 						model = new ChatOpenAI({
 							apiKey: credentials.apiKey as string,
 							model: modelName,
@@ -594,7 +608,6 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'vllm': {
-						const credentials = await this.getCredentials('vllmApi');
 						model = new ChatOpenAI({
 							apiKey: (credentials.apiKey as string) || 'dummy-key',
 							model: modelName,
@@ -606,15 +619,13 @@ export class AiAgentLlmObs implements INodeType {
 						break;
 					}
 					case 'openaiCompatible': {
-						const credentials = await this.getCredentials('openAiApi');
-						const baseUrl = this.getNodeParameter('baseUrl', itemIndex) as string;
 						model = new ChatOpenAI({
 							apiKey: credentials.apiKey as string,
 							model: modelName,
 							temperature: modelOptions.temperature ?? 0.7,
 							maxTokens: modelOptions.maxTokens ?? 4096,
 							topP: modelOptions.topP,
-							configuration: { baseURL: baseUrl },
+							configuration: { baseURL: credentials.baseUrl as string },
 						});
 						break;
 					}
@@ -705,8 +716,7 @@ export class AiAgentLlmObs implements INodeType {
 				};
 				const llmClassName = providerToClassName[provider] || provider;
 
-				// Initialize Langfuse handler
-				const langfuseCredentials = await this.getCredentials('langfuseObsApi');
+				// Initialize Langfuse handler (using credentials from combined credential)
 				let customMetadata: Record<string, any> = {};
 				if (typeof langfuseOptions.customMetadata === 'string') {
 					try {
@@ -725,9 +735,9 @@ export class AiAgentLlmObs implements INodeType {
 					: undefined;
 
 				langfuseHandlerRef = new CallbackHandler({
-					baseUrl: langfuseCredentials.baseUrl as string,
-					publicKey: langfuseCredentials.publicKey as string,
-					secretKey: langfuseCredentials.secretKey as string,
+					baseUrl: credentials.langfuseBaseUrl as string,
+					publicKey: credentials.langfusePublicKey as string,
+					secretKey: credentials.langfuseSecretKey as string,
 					sessionId: langfuseOptions.sessionId || undefined,
 					userId: langfuseOptions.userId || undefined,
 					metadata: {

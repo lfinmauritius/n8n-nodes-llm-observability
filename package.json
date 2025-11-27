@@ -45,8 +45,17 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/LangfuseObsApi.credentials.js",
-      "dist/credentials/VllmApi.credentials.js"
+      "dist/credentials/OpenAiLangfuseApi.credentials.js",
+      "dist/credentials/AnthropicLangfuseApi.credentials.js",
+      "dist/credentials/AzureOpenAiLangfuseApi.credentials.js",
+      "dist/credentials/GeminiLangfuseApi.credentials.js",
+      "dist/credentials/BedrockLangfuseApi.credentials.js",
+      "dist/credentials/GroqLangfuseApi.credentials.js",
+      "dist/credentials/MistralLangfuseApi.credentials.js",
+      "dist/credentials/OllamaLangfuseApi.credentials.js",
+      "dist/credentials/GrokLangfuseApi.credentials.js",
+      "dist/credentials/VllmLangfuseApi.credentials.js",
+      "dist/credentials/OpenAiCompatibleLangfuseApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/AiAgentLlmObs/AiAgentLlmObs.node.js"
