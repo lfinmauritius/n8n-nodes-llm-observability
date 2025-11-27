@@ -820,8 +820,8 @@ export class AiAgentLlmObs implements INodeType {
 
 							if (tool) {
 								try {
-									// Pass Langfuse callbacks to tool for proper tracing
-									const toolResult = await tool.invoke(toolArgs, invokeOptions);
+									// Don't pass Langfuse callbacks to tools - it creates duplicate traces
+									const toolResult = await tool.invoke(toolArgs);
 									intermediateSteps.push({
 										action: { tool: toolName, toolInput: toolArgs },
 										observation: toolResult,
