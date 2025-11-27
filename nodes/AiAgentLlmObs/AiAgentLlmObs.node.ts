@@ -337,8 +337,18 @@ export class AiAgentLlmObs implements INodeType {
 			{
 				displayName: 'Enable Langfuse Observability',
 				name: 'enableLangfuse',
-				type: 'boolean',
+				type: 'options',
 				noDataExpression: true,
+				options: [
+					{
+						name: 'No',
+						value: false,
+					},
+					{
+						name: 'Yes',
+						value: true,
+					},
+				],
 				default: false,
 				description: 'Whether to enable Langfuse tracing for this agent',
 			},
