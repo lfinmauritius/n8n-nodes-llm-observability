@@ -9,4 +9,4 @@ yarn.lock
 package-lock.json
 
 # Local build artifacts (npm pack)
-n8n-nodes-openai-langfuse-*.tgz
+n8n-nodes-openai-langfuse-*.tgznul
