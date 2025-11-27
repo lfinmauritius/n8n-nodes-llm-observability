@@ -6,7 +6,7 @@ import {
 	type SupplyData,
 } from 'n8n-workflow';
 
-import { N8nLlmTracing } from '../LmChatOpenAiLangfuse/utils/N8nLlmTracing';
+import { N8nLlmTracing } from '../utils/N8nLlmTracing';
 
 const GEMINI_MODELS = [
 	{ name: 'Gemini 2.5 Flash Preview', value: 'gemini-2.5-flash-preview-05-20' },

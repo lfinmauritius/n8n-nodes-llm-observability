@@ -1,7 +1,7 @@
 import type { ILoadOptionsFunctions, INodeListSearchResult } from 'n8n-workflow';
 import OpenAI from 'openai';
 
-import { getProxyAgent } from '../../LmChatOpenAiLangfuse/utils/httpProxyAgent';
+import { getProxyAgent } from '../../utils/httpProxyAgent';
 
 export async function searchModels(
     this: ILoadOptionsFunctions,

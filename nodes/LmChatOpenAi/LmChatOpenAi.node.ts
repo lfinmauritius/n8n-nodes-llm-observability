@@ -7,7 +7,7 @@ import {
 } from 'n8n-workflow';
 
 import { searchModels } from './methods/loadModels';
-import { N8nLlmTracing } from '../LmChatOpenAiLangfuse/utils/N8nLlmTracing';
+import { N8nLlmTracing } from '../utils/N8nLlmTracing';
 
 export class LmChatOpenAi implements INodeType {
     methods = {

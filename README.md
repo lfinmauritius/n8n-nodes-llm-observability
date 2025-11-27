@@ -6,161 +6,161 @@
 
 npm package: [https://www.npmjs.com/package/n8n-nodes-llm-observability](https://www.npmjs.com/package/n8n-nodes-llm-observability)
 
-## Features
+## Overview
 
-This package provides **pure LLM nodes** for all major providers, with **modular observability** support:
+This package provides **pure LLM nodes** for all major providers, with **modular observability** support. The key innovation is the separation of LLM functionality from observability - you can use any LLM provider independently, and optionally add tracing by connecting through an observability node.
 
-### Supported LLM Providers
-- OpenAI (GPT-4, GPT-4o, etc.)
-- Anthropic (Claude 3, Claude 3.5, etc.)
-- Azure OpenAI
-- Google Gemini
-- AWS Bedrock
-- Groq
-- Mistral AI
-- Ollama
-- Cohere
-- vLLM
+## Supported LLM Providers
 
-### Modular Architecture
-- **Pure LLM nodes**: Use any LLM provider without observability overhead
-- **Observability sub-nodes**: Add tracing as a separate layer
-  - Langfuse (included)
-  - More coming soon (LangSmith, Phoenix, Helicone...)
+| Provider | Node Name | Credential |
+|----------|-----------|------------|
+| OpenAI | LM Chat OpenAI | OpenAI API |
+| Anthropic | LM Chat Anthropic | Anthropic API |
+| Azure OpenAI | LM Chat Azure OpenAI | Azure OpenAI API |
+| Google Gemini | LM Chat Google Gemini | Google Gemini API |
+| AWS Bedrock | LM Chat AWS Bedrock | AWS Bedrock API |
+| Groq | LM Chat Groq | Groq API |
+| Mistral AI | LM Chat Mistral | Mistral API |
+| Ollama | LM Chat Ollama | Ollama API |
+| Cohere | LM Chat Cohere | Cohere API |
+| vLLM | LM Chat vLLM | vLLM API |
 
-### Key Benefits
-- Automatic tracing for every request and response
-- Custom metadata injection: `sessionId`, `userId`, and structured JSON
-- Decoupled architecture: choose your LLM and observability independently
+## Observability
 
-[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
+| Provider | Node Name | Credential |
+|----------|-----------|------------|
+| Langfuse | Langfuse Observability | Langfuse API |
 
-## Table of Contents
+More observability providers coming soon (LangSmith, Phoenix, Helicone...)
 
-- [Installation](#installation)
-- [Architecture](#architecture)
-- [Credentials](#credentials)
-- [Usage](#usage)
-- [Compatibility](#compatibility)
-- [Resources](#resources)
-- [Version History](#version-history)
+## Architecture
+
+### Without Observability
+
+Use LLM nodes directly connected to your AI Agent:
+
+```
+[LLM Node] --> [AI Agent]
+```
+
+### With Observability
+
+Add observability by connecting through the Observability node:
+
+```
+[LLM Node] --> [Langfuse Observability] --> [AI Agent]
+```
+
+The observability node intercepts LLM calls and sends traces to your observability platform without modifying the LLM behavior.
 
 ## Installation
 
-Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the official n8n documentation for community nodes.
-
 ### Community Nodes (Recommended)
+
 For **n8n v0.187+**, install directly from the UI:
-1. Go to Settings → Community Nodes
+
+1. Go to **Settings** > **Community Nodes**
 2. Click **Install**
-3. Enter `n8n-nodes-llm-observability` in the package name field
+3. Enter `n8n-nodes-llm-observability`
 4. Agree to the risks of using community nodes
-5. Select Install
+5. Click **Install**
 
 ### Manual Installation
+
 ```bash
 cd ~/.n8n
 npm install n8n-nodes-llm-observability
 n8n start
 ```
 
-## Architecture
-
-### Pure LLM Nodes
-Use LLM nodes directly without any observability:
-
-```
-[LLM Node] → [AI Agent]
-```
-
-Available nodes:
-- LM Chat OpenAI
-- LM Chat Anthropic
-- LM Chat Azure OpenAI
-- LM Chat Google Gemini
-- LM Chat AWS Bedrock
-- LM Chat Groq
-- LM Chat Mistral
-- LM Chat Ollama
-- LM Chat Cohere
-- LM Chat vLLM
-
-### With Observability
-Add observability by connecting through the Observability sub-node:
-
-```
-[LLM Node] → [Observability Langfuse] → [AI Agent]
-```
-
-The observability node intercepts LLM calls and sends traces to your observability platform.
-
-### Legacy Nodes (Backward Compatibility)
-The original integrated nodes are still available:
-- LM Chat OpenAI Langfuse
-- LM Chat Anthropic Langfuse
-- etc.
-
-## Credentials
-
-### Pure LLM Credentials
-Each provider has its own credential type:
-
-| Provider | Credential Name |
-|----------|-----------------|
-| OpenAI | OpenAI API |
-| Anthropic | Anthropic API |
-| Azure OpenAI | Azure OpenAI API |
-| Google Gemini | Google Gemini API |
-| AWS Bedrock | AWS Bedrock API |
-| Groq | Groq API |
-| Mistral | Mistral API |
-| Ollama | Ollama API |
-| Cohere | Cohere API |
-| vLLM | vLLM API |
-
-### Langfuse Credential
-For the Observability Langfuse node:
-
-| Field | Description | Example |
-|-------|-------------|---------|
-| Base URL | Langfuse instance URL | `https://cloud.langfuse.com` |
-| Public Key | Langfuse public key | `pk-xxx` |
-| Secret Key | Langfuse secret key | `sk-xxx` |
-
-> To find your Langfuse keys: Log in to your Langfuse dashboard → Settings → Projects → [Your Project]
-
 ## Usage
 
-### Example: OpenAI with Langfuse Observability
+### Basic Usage (No Observability)
 
-1. Add an **LM Chat OpenAI** node
-2. Connect it to an **Observability Langfuse** node
-3. Connect the observability node to your **AI Agent**
+1. Add an LLM node (e.g., **LM Chat OpenAI**)
+2. Configure the credentials
+3. Connect directly to your **AI Agent**
 
-The Langfuse node supports metadata injection:
+### With Langfuse Observability
+
+1. Add an LLM node (e.g., **LM Chat OpenAI**)
+2. Add a **Langfuse Observability** node
+3. Connect: `LLM Node --> Langfuse Observability --> AI Agent`
+4. Configure both credentials
+
+### Langfuse Metadata
+
+The Langfuse Observability node supports metadata injection:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `sessionId` | string | Group related runs |
-| `userId` | string | Identify the end user |
-| `metadata` | object | Custom JSON context |
+| Session ID | string | Group related traces together |
+| User ID | string | Identify the end user |
+| Trace Name | string | Custom name for the trace |
+| Tags | string | Comma-separated tags for filtering |
+| Custom Metadata | JSON | Additional context as JSON |
 
-### Example Metadata
+Example metadata:
 ```json
 {
-  "project": "my-project",
+  "project": "customer-support",
   "env": "production",
-  "workflow": "customer-support"
+  "workflow": "ticket-classification"
 }
 ```
 
+## Credentials Setup
+
+### OpenAI
+- **API Key**: Your OpenAI API key
+- **Organization ID** (optional): Your OpenAI organization
+- **Base URL** (optional): Custom endpoint for OpenAI-compatible APIs
+
+### Anthropic
+- **API Key**: Your Anthropic API key
+- **Base URL** (optional): Custom endpoint
+
+### Azure OpenAI
+- **API Key**: Your Azure OpenAI API key
+- **Resource Name**: Your Azure resource name
+- **API Version**: API version (e.g., `2024-02-15-preview`)
+- **Endpoint** (optional): Full endpoint URL
+
+### Google Gemini
+- **API Key**: Your Google AI Studio API key
+
+### AWS Bedrock
+- **Access Key ID**: AWS access key
+- **Secret Access Key**: AWS secret key
+- **Region**: AWS region (e.g., `us-east-1`)
+
+### Groq
+- **API Key**: Your Groq API key
+
+### Mistral
+- **API Key**: Your Mistral API key
+
+### Ollama
+- **Base URL**: Ollama server URL (e.g., `http://localhost:11434`)
+- **API Key** (optional): If authentication is enabled
+
+### Cohere
+- **API Key**: Your Cohere API key
+
+### vLLM
+- **Base URL**: vLLM server URL
+- **API Key** (optional): If authentication is enabled
+
+### Langfuse
+- **Base URL**: Langfuse instance URL (e.g., `https://cloud.langfuse.com`)
+- **Public Key**: Langfuse public key
+- **Secret Key**: Langfuse secret key
+
 ## Compatibility
 
-- Requires n8n version 1.0.0 or later
-- Node.js >= 20.15
-- Compatible with:
-  - All listed LLM providers
-  - Langfuse Cloud and self-hosted instances
+- **n8n**: Version 1.0.0 or later
+- **Node.js**: Version 20.15 or later
+- **Langfuse**: Cloud and self-hosted instances
 
 ## Resources
 
@@ -171,9 +171,10 @@ The Langfuse node supports metadata injection:
 
 ## Version History
 
-- **v0.3.0** – Modular architecture: pure LLM nodes + separate observability layer
-- **v0.2.x** – Multi-provider support with integrated Langfuse
-- **v0.1.x** – Initial release (OpenAI + Langfuse)
+- **v0.4.0** - Simplified architecture: removed legacy integrated nodes, pure modular design
+- **v0.3.0** - Modular architecture: pure LLM nodes + separate observability layer
+- **v0.2.x** - Multi-provider support with integrated Langfuse
+- **v0.1.x** - Initial release (OpenAI + Langfuse)
 
 ## License
 

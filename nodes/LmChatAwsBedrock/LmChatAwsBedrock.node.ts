@@ -7,7 +7,7 @@ import {
 	type SupplyData,
 } from 'n8n-workflow';
 
-import { N8nLlmTracing } from '../LmChatOpenAiLangfuse/utils/N8nLlmTracing';
+import { N8nLlmTracing } from '../utils/N8nLlmTracing';
 
 const BEDROCK_MODELS = [
 	{ name: 'Claude 3.5 Sonnet V2', value: 'anthropic.claude-3-5-sonnet-20241022-v2:0' },

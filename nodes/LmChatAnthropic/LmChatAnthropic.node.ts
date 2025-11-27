@@ -6,8 +6,8 @@ import {
 	type SupplyData,
 } from 'n8n-workflow';
 
-import { N8nLlmTracing } from '../LmChatOpenAiLangfuse/utils/N8nLlmTracing';
-import { getProxyAgent } from '../LmChatOpenAiLangfuse/utils/httpProxyAgent';
+import { N8nLlmTracing } from '../utils/N8nLlmTracing';
+import { getProxyAgent } from '../utils/httpProxyAgent';
 
 const ANTHROPIC_MODELS = [
 	{ name: 'Claude Sonnet 4 (Claude-Sonnet-4-20250514)', value: 'claude-sonnet-4-20250514' },

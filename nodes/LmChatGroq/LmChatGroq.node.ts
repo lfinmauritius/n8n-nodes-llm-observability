@@ -6,7 +6,7 @@ import {
 	type SupplyData,
 } from 'n8n-workflow';
 
-import { N8nLlmTracing } from '../LmChatOpenAiLangfuse/utils/N8nLlmTracing';
+import { N8nLlmTracing } from '../utils/N8nLlmTracing';
 
 const GROQ_MODELS = [
 	{ name: 'Llama 3.3 70B Versatile', value: 'llama-3.3-70b-versatile' },

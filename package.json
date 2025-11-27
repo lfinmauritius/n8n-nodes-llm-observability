@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-llm-observability",
-  "version": "0.3.0",
-  "description": "n8n community nodes: LLM providers with optional Langfuse observability. Pure LLM nodes + modular observability layer.",
+  "version": "0.4.0",
+  "description": "n8n community nodes: LLM providers with modular Langfuse observability. Pure LLM nodes + separate observability layer.",
   "keywords": [
     "n8n-community-node-package",
     "langfuse",
@@ -23,14 +23,14 @@
     "tracing"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://ascenzia.fr",
   "author": {
-    "name": "Ruby Lo",
-    "email": "rorubyy@gmail.com"
+    "name": "Ascenzia",
+    "url": "https://ascenzia.fr"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rorubyy/n8n-nodes-openai-langfuse.git"
+    "url": "https://github.com/lfinmauritius/n8n-nodes-llm-observability.git"
   },
   "engines": {
     "node": ">=20.15"
@@ -60,17 +60,7 @@
       "dist/credentials/MistralApi.credentials.js",
       "dist/credentials/OllamaApi.credentials.js",
       "dist/credentials/CohereApi.credentials.js",
-      "dist/credentials/VllmApi.credentials.js",
-      "dist/credentials/OpenAiApiWithLangfuseApi.credentials.js",
-      "dist/credentials/AnthropicApiWithLangfuseApi.credentials.js",
-      "dist/credentials/AzureOpenAiApiWithLangfuseApi.credentials.js",
-      "dist/credentials/GoogleGeminiApiWithLangfuseApi.credentials.js",
-      "dist/credentials/AwsBedrockApiWithLangfuseApi.credentials.js",
-      "dist/credentials/GroqApiWithLangfuseApi.credentials.js",
-      "dist/credentials/MistralApiWithLangfuseApi.credentials.js",
-      "dist/credentials/OllamaApiWithLangfuseApi.credentials.js",
-      "dist/credentials/CohereApiWithLangfuseApi.credentials.js",
-      "dist/credentials/VllmApiWithLangfuseApi.credentials.js"
+      "dist/credentials/VllmApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/ObservabilityLangfuse/ObservabilityLangfuse.node.js",
@@ -83,17 +73,7 @@
       "dist/nodes/LmChatMistral/LmChatMistral.node.js",
       "dist/nodes/LmChatOllama/LmChatOllama.node.js",
       "dist/nodes/LmChatCohere/LmChatCohere.node.js",
-      "dist/nodes/LmChatVllm/LmChatVllm.node.js",
-      "dist/nodes/LmChatOpenAiLangfuse/LmChatOpenAiLangfuse.node.js",
-      "dist/nodes/LmChatAnthropicLangfuse/LmChatAnthropicLangfuse.node.js",
-      "dist/nodes/LmChatAzureOpenAiLangfuse/LmChatAzureOpenAiLangfuse.node.js",
-      "dist/nodes/LmChatGoogleGeminiLangfuse/LmChatGoogleGeminiLangfuse.node.js",
-      "dist/nodes/LmChatAwsBedrockLangfuse/LmChatAwsBedrockLangfuse.node.js",
-      "dist/nodes/LmChatGroqLangfuse/LmChatGroqLangfuse.node.js",
-      "dist/nodes/LmChatMistralLangfuse/LmChatMistralLangfuse.node.js",
-      "dist/nodes/LmChatOllamaLangfuse/LmChatOllamaLangfuse.node.js",
-      "dist/nodes/LmChatCohereLangfuse/LmChatCohereLangfuse.node.js",
-      "dist/nodes/LmChatVllmLangfuse/LmChatVllmLangfuse.node.js"
+      "dist/nodes/LmChatVllm/LmChatVllm.node.js"
     ]
   },
   "dependencies": {

@@ -6,7 +6,7 @@ import {
 	type SupplyData,
 } from 'n8n-workflow';
 
-import { N8nLlmTracing } from '../LmChatOpenAiLangfuse/utils/N8nLlmTracing';
+import { N8nLlmTracing } from '../utils/N8nLlmTracing';
 
 const MISTRAL_MODELS = [
 	{ name: 'Mistral Large (Latest)', value: 'mistral-large-latest' },
