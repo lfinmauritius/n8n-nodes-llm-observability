@@ -13,20 +13,20 @@ import { getProxyAgent } from '../LmChatOpenAiLangfuse/utils/httpProxyAgent';
 
 const ANTHROPIC_MODELS = [
 	// Claude 4 models
-	{ name: 'Claude Sonnet 4 (claude-sonnet-4-20250514)', value: 'claude-sonnet-4-20250514' },
+	{ name: 'Claude Sonnet 4 (Claude-Sonnet-4-20250514)', value: 'claude-sonnet-4-20250514' },
 	// Claude 3.7 models
-	{ name: 'Claude 3.7 Sonnet (claude-3-7-sonnet-20250219)', value: 'claude-3-7-sonnet-20250219' },
+	{ name: 'Claude 3.7 Sonnet (Claude-3-7-Sonnet-20250219)', value: 'claude-3-7-sonnet-20250219' },
 	{ name: 'Claude 3.7 Sonnet (Latest)', value: 'claude-3-7-sonnet-latest' },
 	// Claude 3.5 models
-	{ name: 'Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)', value: 'claude-3-5-sonnet-20241022' },
+	{ name: 'Claude 3.5 Sonnet (Claude-3-5-Sonnet-20241022)', value: 'claude-3-5-sonnet-20241022' },
 	{ name: 'Claude 3.5 Sonnet (Latest)', value: 'claude-3-5-sonnet-latest' },
-	{ name: 'Claude 3.5 Haiku (claude-3-5-haiku-20241022)', value: 'claude-3-5-haiku-20241022' },
+	{ name: 'Claude 3.5 Haiku (Claude-3-5-Haiku-20241022)', value: 'claude-3-5-haiku-20241022' },
 	{ name: 'Claude 3.5 Haiku (Latest)', value: 'claude-3-5-haiku-latest' },
 	// Claude 3 models
-	{ name: 'Claude 3 Opus (claude-3-opus-20240229)', value: 'claude-3-opus-20240229' },
+	{ name: 'Claude 3 Opus (Claude-3-Opus-20240229)', value: 'claude-3-opus-20240229' },
 	{ name: 'Claude 3 Opus (Latest)', value: 'claude-3-opus-latest' },
-	{ name: 'Claude 3 Sonnet (claude-3-sonnet-20240229)', value: 'claude-3-sonnet-20240229' },
-	{ name: 'Claude 3 Haiku (claude-3-haiku-20240307)', value: 'claude-3-haiku-20240307' },
+	{ name: 'Claude 3 Sonnet (Claude-3-Sonnet-20240229)', value: 'claude-3-sonnet-20240229' },
+	{ name: 'Claude 3 Haiku (Claude-3-Haiku-20240307)', value: 'claude-3-haiku-20240307' },
 ];
 
 export class LmChatAnthropicLangfuse implements INodeType {
@@ -122,6 +122,14 @@ export class LmChatAnthropicLangfuse implements INodeType {
 						type: 'string',
 					},
 					{
+						displayName: 'Enable Thinking',
+						name: 'thinking',
+						type: 'boolean',
+						default: false,
+						description:
+							'Whether to enable extended thinking mode for complex reasoning tasks (Claude 3.5+ only)',
+					},
+					{
 						displayName: 'Maximum Number of Tokens',
 						name: 'maxTokens',
 						default: 4096,
@@ -141,32 +149,6 @@ export class LmChatAnthropicLangfuse implements INodeType {
 						type: 'number',
 					},
 					{
-						displayName: 'Top K',
-						name: 'topK',
-						default: -1,
-						typeOptions: { minValue: -1 },
-						description:
-							'Used to remove "long tail" low probability responses. Set to -1 to disable.',
-						type: 'number',
-					},
-					{
-						displayName: 'Top P',
-						name: 'topP',
-						default: 1,
-						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 1 },
-						description:
-							'Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered.',
-						type: 'number',
-					},
-					{
-						displayName: 'Enable Thinking',
-						name: 'thinking',
-						type: 'boolean',
-						default: false,
-						description:
-							'Whether to enable extended thinking mode for complex reasoning tasks (Claude 3.5+ only)',
-					},
-					{
 						displayName: 'Thinking Budget (Tokens)',
 						name: 'thinkingBudget',
 						type: 'number',
@@ -178,6 +160,23 @@ export class LmChatAnthropicLangfuse implements INodeType {
 								thinking: [true],
 							},
 						},
+					},
+					{
+						displayName: 'Top K',
+						name: 'topK',
+						default: -1,
+						typeOptions: { minValue: -1 },
+						description:
+							'Used to remove "long tail" low probability responses - set to -1 to disable',
+						type: 'number',
+					},
+					{
+						displayName: 'Top P',
+						name: 'topP',
+						default: 1,
+						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 1 },
+						description: 'Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered',
+						type: 'number',
 					},
 				],
 			},

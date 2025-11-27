@@ -137,33 +137,6 @@ export class LmChatGoogleGeminiLangfuse implements INodeType {
 						},
 					},
 					{
-						displayName: 'Sampling Temperature',
-						name: 'temperature',
-						default: 0.7,
-						typeOptions: { maxValue: 2, minValue: 0, numberPrecision: 1 },
-						description:
-							'Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive.',
-						type: 'number',
-					},
-					{
-						displayName: 'Top K',
-						name: 'topK',
-						default: 40,
-						typeOptions: { minValue: 1 },
-						description:
-							'The number of highest probability vocabulary tokens to keep for top-k filtering',
-						type: 'number',
-					},
-					{
-						displayName: 'Top P',
-						name: 'topP',
-						default: 0.95,
-						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 2 },
-						description:
-							'Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered',
-						type: 'number',
-					},
-					{
 						displayName: 'Safety Settings',
 						name: 'safetySettings',
 						type: 'fixedCollection',
@@ -194,6 +167,33 @@ export class LmChatGoogleGeminiLangfuse implements INodeType {
 							},
 						],
 						description: 'Configure safety settings to block certain types of content',
+					},
+					{
+						displayName: 'Sampling Temperature',
+						name: 'temperature',
+						default: 0.7,
+						typeOptions: { maxValue: 2, minValue: 0, numberPrecision: 1 },
+						description:
+							'Controls randomness: Lowering results in less random completions. As the temperature approaches zero, the model will become deterministic and repetitive.',
+						type: 'number',
+					},
+					{
+						displayName: 'Top K',
+						name: 'topK',
+						default: 40,
+						typeOptions: { minValue: 1 },
+						description:
+							'The number of highest probability vocabulary tokens to keep for top-k filtering',
+						type: 'number',
+					},
+					{
+						displayName: 'Top P',
+						name: 'topP',
+						default: 0.95,
+						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 2 },
+						description:
+							'Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered',
+						type: 'number',
 					},
 				],
 			},

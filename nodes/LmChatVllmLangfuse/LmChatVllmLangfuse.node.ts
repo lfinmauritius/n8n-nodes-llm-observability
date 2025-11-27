@@ -97,6 +97,22 @@ export class LmChatVllmLangfuse implements INodeType {
 				default: {},
 				options: [
 					{
+						displayName: 'Frequency Penalty',
+						name: 'frequencyPenalty',
+						default: 0,
+						typeOptions: { maxValue: 2, minValue: -2, numberPrecision: 1 },
+						description:
+							'Positive values penalize new tokens based on their existing frequency in the text',
+						type: 'number',
+					},
+					{
+						displayName: 'Max Retries',
+						name: 'maxRetries',
+						default: 2,
+						description: 'Maximum number of retries to attempt',
+						type: 'number',
+					},
+					{
 						displayName: 'Maximum Number of Tokens',
 						name: 'maxTokens',
 						default: 4096,
@@ -107,39 +123,20 @@ export class LmChatVllmLangfuse implements INodeType {
 						},
 					},
 					{
-						displayName: 'Sampling Temperature',
-						name: 'temperature',
-						default: 0.7,
-						typeOptions: { maxValue: 2, minValue: 0, numberPrecision: 1 },
-						description:
-							'Controls randomness: Lowering results in less random completions.',
-						type: 'number',
-					},
-					{
-						displayName: 'Top P',
-						name: 'topP',
-						default: 1,
-						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 2 },
-						description:
-							'Controls diversity via nucleus sampling',
-						type: 'number',
-					},
-					{
-						displayName: 'Frequency Penalty',
-						name: 'frequencyPenalty',
-						default: 0,
-						typeOptions: { maxValue: 2, minValue: -2, numberPrecision: 1 },
-						description:
-							"Positive values penalize new tokens based on their existing frequency in the text",
-						type: 'number',
-					},
-					{
 						displayName: 'Presence Penalty',
 						name: 'presencePenalty',
 						default: 0,
 						typeOptions: { maxValue: 2, minValue: -2, numberPrecision: 1 },
 						description:
-							"Positive values penalize new tokens based on whether they appear in the text so far",
+							'Positive values penalize new tokens based on whether they appear in the text so far',
+						type: 'number',
+					},
+					{
+						displayName: 'Sampling Temperature',
+						name: 'temperature',
+						default: 0.7,
+						typeOptions: { maxValue: 2, minValue: 0, numberPrecision: 1 },
+						description: 'Controls randomness: Lowering results in less random completions',
 						type: 'number',
 					},
 					{
@@ -157,10 +154,12 @@ export class LmChatVllmLangfuse implements INodeType {
 						type: 'number',
 					},
 					{
-						displayName: 'Max Retries',
-						name: 'maxRetries',
-						default: 2,
-						description: 'Maximum number of retries to attempt',
+						displayName: 'Top P',
+						name: 'topP',
+						default: 1,
+						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 2 },
+						description:
+							'Controls diversity via nucleus sampling',
 						type: 'number',
 					},
 				],

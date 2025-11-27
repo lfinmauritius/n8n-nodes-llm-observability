@@ -17,7 +17,7 @@ const BEDROCK_MODELS = [
 	{ name: 'Amazon Titan Text G1 - Lite', value: 'amazon.titan-text-lite-v1' },
 	{ name: 'Amazon Titan Text Premier', value: 'amazon.titan-text-premier-v1:0' },
 	// Anthropic Claude models
-	{ name: 'Claude 3.5 Sonnet v2', value: 'anthropic.claude-3-5-sonnet-20241022-v2:0' },
+	{ name: 'Claude 3.5 Sonnet V2', value: 'anthropic.claude-3-5-sonnet-20241022-v2:0' },
 	{ name: 'Claude 3.5 Sonnet', value: 'anthropic.claude-3-5-sonnet-20240620-v1:0' },
 	{ name: 'Claude 3.5 Haiku', value: 'anthropic.claude-3-5-haiku-20241022-v1:0' },
 	{ name: 'Claude 3 Opus', value: 'anthropic.claude-3-opus-20240229-v1:0' },
@@ -25,7 +25,7 @@ const BEDROCK_MODELS = [
 	{ name: 'Claude 3 Haiku', value: 'anthropic.claude-3-haiku-20240307-v1:0' },
 	{ name: 'Claude Instant', value: 'anthropic.claude-instant-v1' },
 	{ name: 'Claude v2.1', value: 'anthropic.claude-v2:1' },
-	{ name: 'Claude v2', value: 'anthropic.claude-v2' },
+	{ name: 'Claude V2', value: 'anthropic.claude-v2' },
 	// Meta Llama models
 	{ name: 'Llama 3.2 90B Instruct', value: 'meta.llama3-2-90b-instruct-v1:0' },
 	{ name: 'Llama 3.2 11B Instruct', value: 'meta.llama3-2-11b-instruct-v1:0' },

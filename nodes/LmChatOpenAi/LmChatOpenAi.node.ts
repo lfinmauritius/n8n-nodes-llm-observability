@@ -175,8 +175,7 @@ export class LmChatOpenAi implements INodeType {
                         name: 'temperature',
                         default: 0.7,
                         typeOptions: { maxValue: 2, minValue: 0, numberPrecision: 1 },
-                        description:
-                            'Controls randomness: Lowering results in less random completions.',
+                        description: 'Controls randomness: Lowering results in less random completions',
                         type: 'number',
                     },
                     {
@@ -191,8 +190,7 @@ export class LmChatOpenAi implements INodeType {
                         name: 'topP',
                         default: 1,
                         typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 1 },
-                        description:
-                            'Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered.',
+                        description: 'Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered',
                         type: 'number',
                     },
                 ],

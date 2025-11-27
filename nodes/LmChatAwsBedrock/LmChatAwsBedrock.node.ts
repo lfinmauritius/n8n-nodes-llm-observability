@@ -10,7 +10,7 @@ import {
 import { N8nLlmTracing } from '../LmChatOpenAiLangfuse/utils/N8nLlmTracing';
 
 const BEDROCK_MODELS = [
-	{ name: 'Claude 3.5 Sonnet v2', value: 'anthropic.claude-3-5-sonnet-20241022-v2:0' },
+	{ name: 'Claude 3.5 Sonnet V2', value: 'anthropic.claude-3-5-sonnet-20241022-v2:0' },
 	{ name: 'Claude 3.5 Haiku', value: 'anthropic.claude-3-5-haiku-20241022-v1:0' },
 	{ name: 'Claude 3 Opus', value: 'anthropic.claude-3-opus-20240229-v1:0' },
 	{ name: 'Llama 3.2 90B Instruct', value: 'meta.llama3-2-90b-instruct-v1:0' },

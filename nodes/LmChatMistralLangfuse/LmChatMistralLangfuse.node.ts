@@ -121,6 +121,13 @@ export class LmChatMistralLangfuse implements INodeType {
 				default: {},
 				options: [
 					{
+						displayName: 'Max Retries',
+						name: 'maxRetries',
+						default: 2,
+						description: 'Maximum number of retries to attempt',
+						type: 'number',
+					},
+					{
 						displayName: 'Maximum Number of Tokens',
 						name: 'maxTokens',
 						default: 4096,
@@ -129,6 +136,20 @@ export class LmChatMistralLangfuse implements INodeType {
 						typeOptions: {
 							maxValue: 32768,
 						},
+					},
+					{
+						displayName: 'Random Seed',
+						name: 'randomSeed',
+						type: 'number',
+						default: 0,
+						description: 'Set a random seed for deterministic outputs (0 = disabled)',
+					},
+					{
+						displayName: 'Safe Mode',
+						name: 'safeMode',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to enable safe mode to filter potentially harmful content',
 					},
 					{
 						displayName: 'Sampling Temperature',
@@ -146,27 +167,6 @@ export class LmChatMistralLangfuse implements INodeType {
 						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 2 },
 						description:
 							'Controls diversity via nucleus sampling: 0.5 means half of all likelihood-weighted options are considered',
-						type: 'number',
-					},
-					{
-						displayName: 'Safe Mode',
-						name: 'safeMode',
-						type: 'boolean',
-						default: false,
-						description: 'Whether to enable safe mode to filter potentially harmful content',
-					},
-					{
-						displayName: 'Random Seed',
-						name: 'randomSeed',
-						type: 'number',
-						default: 0,
-						description: 'Set a random seed for deterministic outputs (0 = disabled)',
-					},
-					{
-						displayName: 'Max Retries',
-						name: 'maxRetries',
-						default: 2,
-						description: 'Maximum number of retries to attempt',
 						type: 'number',
 					},
 				],

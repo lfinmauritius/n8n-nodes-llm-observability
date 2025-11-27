@@ -10,12 +10,12 @@ import { N8nLlmTracing } from '../LmChatOpenAiLangfuse/utils/N8nLlmTracing';
 import { getProxyAgent } from '../LmChatOpenAiLangfuse/utils/httpProxyAgent';
 
 const ANTHROPIC_MODELS = [
-	{ name: 'Claude Sonnet 4 (claude-sonnet-4-20250514)', value: 'claude-sonnet-4-20250514' },
+	{ name: 'Claude Sonnet 4 (Claude-Sonnet-4-20250514)', value: 'claude-sonnet-4-20250514' },
 	{ name: 'Claude 3.7 Sonnet (Latest)', value: 'claude-3-7-sonnet-latest' },
 	{ name: 'Claude 3.5 Sonnet (Latest)', value: 'claude-3-5-sonnet-latest' },
 	{ name: 'Claude 3.5 Haiku (Latest)', value: 'claude-3-5-haiku-latest' },
 	{ name: 'Claude 3 Opus (Latest)', value: 'claude-3-opus-latest' },
-	{ name: 'Claude 3 Haiku (claude-3-haiku-20240307)', value: 'claude-3-haiku-20240307' },
+	{ name: 'Claude 3 Haiku (Claude-3-Haiku-20240307)', value: 'claude-3-haiku-20240307' },
 ];
 
 export class LmChatAnthropic implements INodeType {
@@ -75,6 +75,13 @@ export class LmChatAnthropic implements INodeType {
 						type: 'string',
 					},
 					{
+						displayName: 'Enable Thinking',
+						name: 'thinking',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to enable extended thinking mode (Claude 3.5+ only)',
+					},
+					{
 						displayName: 'Maximum Number of Tokens',
 						name: 'maxTokens',
 						default: 4096,
@@ -91,29 +98,6 @@ export class LmChatAnthropic implements INodeType {
 						type: 'number',
 					},
 					{
-						displayName: 'Top K',
-						name: 'topK',
-						default: -1,
-						typeOptions: { minValue: -1 },
-						description: 'Limits token selection. Set to -1 to disable.',
-						type: 'number',
-					},
-					{
-						displayName: 'Top P',
-						name: 'topP',
-						default: 1,
-						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 1 },
-						description: 'Controls diversity via nucleus sampling',
-						type: 'number',
-					},
-					{
-						displayName: 'Enable Thinking',
-						name: 'thinking',
-						type: 'boolean',
-						default: false,
-						description: 'Enable extended thinking mode (Claude 3.5+ only)',
-					},
-					{
 						displayName: 'Thinking Budget (Tokens)',
 						name: 'thinkingBudget',
 						type: 'number',
@@ -123,6 +107,22 @@ export class LmChatAnthropic implements INodeType {
 						displayOptions: {
 							show: { thinking: [true] },
 						},
+					},
+					{
+						displayName: 'Top K',
+						name: 'topK',
+						default: -1,
+						typeOptions: { minValue: -1 },
+						description: 'Limits token selection - set to -1 to disable',
+						type: 'number',
+					},
+					{
+						displayName: 'Top P',
+						name: 'topP',
+						default: 1,
+						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 1 },
+						description: 'Controls diversity via nucleus sampling',
+						type: 'number',
 					},
 				],
 			},

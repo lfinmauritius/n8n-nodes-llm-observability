@@ -4,7 +4,7 @@ import type {
 	ISupplyDataFunctions,
 	SupplyData,
 } from 'n8n-workflow';
-import { jsonParse } from 'n8n-workflow';
+import { jsonParse, NodeOperationError } from 'n8n-workflow';
 import { CallbackHandler } from 'langfuse-langchain';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 
@@ -56,39 +56,39 @@ export class ObservabilityLangfuse implements INodeType {
 				default: {},
 				options: [
 					{
-						displayName: 'Session ID',
-						name: 'sessionId',
-						type: 'string',
-						default: '',
-						description: 'Used in Langfuse trace grouping. Leave empty to auto-generate.',
-					},
-					{
-						displayName: 'User ID',
-						name: 'userId',
-						type: 'string',
-						default: '',
-						description: 'Optional: for trace attribution in Langfuse',
-					},
-					{
 						displayName: 'Custom Metadata (JSON)',
 						name: 'customMetadata',
 						type: 'json',
 						default: '{}',
-						description: 'Optional. Pass extra metadata to be attached to Langfuse traces.',
+						description: 'Optional - pass extra metadata to be attached to Langfuse traces',
 					},
 					{
-						displayName: 'Trace Name',
-						name: 'traceName',
+						displayName: 'Session ID',
+						name: 'sessionId',
 						type: 'string',
 						default: '',
-						description: 'Optional: custom name for the trace in Langfuse',
+						description: 'Used in Langfuse trace grouping - leave empty to auto-generate',
 					},
 					{
 						displayName: 'Tags',
 						name: 'tags',
 						type: 'string',
 						default: '',
-						description: 'Optional: comma-separated tags for filtering traces in Langfuse',
+						description: 'Optional - comma-separated tags for filtering traces in Langfuse',
+					},
+					{
+						displayName: 'Trace Name',
+						name: 'traceName',
+						type: 'string',
+						default: '',
+						description: 'Optional - custom name for the trace in Langfuse',
+					},
+					{
+						displayName: 'User ID',
+						name: 'userId',
+						type: 'string',
+						default: '',
+						description: 'Optional - for trace attribution in Langfuse',
 					},
 				],
 			},
@@ -105,7 +105,7 @@ export class ObservabilityLangfuse implements INodeType {
 		)) as BaseChatModel;
 
 		if (!inputModel) {
-			throw new Error('No language model connected. Please connect an LLM node to the input.');
+			throw new NodeOperationError(this.getNode(), 'No language model connected. Please connect an LLM node to the input.');
 		}
 
 		// Get Langfuse metadata parameters

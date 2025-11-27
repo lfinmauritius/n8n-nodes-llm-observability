@@ -97,6 +97,24 @@ export class LmChatOllamaLangfuse implements INodeType {
 				default: {},
 				options: [
 					{
+						displayName: 'Format',
+						name: 'format',
+						type: 'options',
+						options: [
+							{ name: 'Default', value: 'default' },
+							{ name: 'JSON', value: 'json' },
+						],
+						default: 'default',
+						description: 'The format to return the response in',
+					},
+					{
+						displayName: 'Keep Alive',
+						name: 'keepAlive',
+						type: 'string',
+						default: '5m',
+						description: 'How long to keep the model loaded (e.g., 5m, 1h, -1 for forever)',
+					},
+					{
 						displayName: 'Number of Context Tokens',
 						name: 'numCtx',
 						default: 4096,
@@ -111,13 +129,27 @@ export class LmChatOllamaLangfuse implements INodeType {
 						type: 'number',
 					},
 					{
+						displayName: 'Repeat Penalty',
+						name: 'repeatPenalty',
+						default: 1.1,
+						typeOptions: { minValue: 0, numberPrecision: 2 },
+						description: 'Penalizes repetitions in the output',
+						type: 'number',
+					},
+					{
 						displayName: 'Sampling Temperature',
 						name: 'temperature',
 						default: 0.7,
 						typeOptions: { maxValue: 2, minValue: 0, numberPrecision: 1 },
-						description:
-							'Controls randomness: Lowering results in less random completions.',
+						description: 'Controls randomness: Lowering results in less random completions',
 						type: 'number',
+					},
+					{
+						displayName: 'Stop Sequences',
+						name: 'stop',
+						type: 'string',
+						default: '',
+						description: 'Comma-separated list of sequences where generation will stop',
 					},
 					{
 						displayName: 'Top K',
@@ -136,39 +168,6 @@ export class LmChatOllamaLangfuse implements INodeType {
 						description:
 							'Controls diversity via nucleus sampling',
 						type: 'number',
-					},
-					{
-						displayName: 'Repeat Penalty',
-						name: 'repeatPenalty',
-						default: 1.1,
-						typeOptions: { minValue: 0, numberPrecision: 2 },
-						description: 'Penalizes repetitions in the output',
-						type: 'number',
-					},
-					{
-						displayName: 'Stop Sequences',
-						name: 'stop',
-						type: 'string',
-						default: '',
-						description: 'Comma-separated list of sequences where generation will stop',
-					},
-					{
-						displayName: 'Format',
-						name: 'format',
-						type: 'options',
-						options: [
-							{ name: 'Default', value: 'default' },
-							{ name: 'JSON', value: 'json' },
-						],
-						default: 'default',
-						description: 'The format to return the response in',
-					},
-					{
-						displayName: 'Keep Alive',
-						name: 'keepAlive',
-						type: 'string',
-						default: '5m',
-						description: 'How long to keep the model loaded (e.g., 5m, 1h, -1 for forever)',
 					},
 				],
 			},

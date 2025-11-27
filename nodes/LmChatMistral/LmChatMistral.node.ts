@@ -53,11 +53,11 @@ export class LmChatMistral implements INodeType {
 				type: 'collection',
 				default: {},
 				options: [
+					{ displayName: 'Max Retries', name: 'maxRetries', type: 'number', default: 2 },
 					{ displayName: 'Max Tokens', name: 'maxTokens', type: 'number', default: 4096 },
+					{ displayName: 'Safe Mode', name: 'safeMode', type: 'boolean', default: false },
 					{ displayName: 'Temperature', name: 'temperature', type: 'number', default: 0.7, typeOptions: { maxValue: 1, minValue: 0 } },
 					{ displayName: 'Top P', name: 'topP', type: 'number', default: 1 },
-					{ displayName: 'Safe Mode', name: 'safeMode', type: 'boolean', default: false },
-					{ displayName: 'Max Retries', name: 'maxRetries', type: 'number', default: 2 },
 				],
 			},
 		],

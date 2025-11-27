@@ -17,7 +17,13 @@
       "Bash(copy \"D:\\Téléchargement\\n8n-nodes-llm-observability\\nodes\\LmChatVllm\\LmChatVllmLight.icon.svg\" \"D:\\Téléchargement\\n8n-nodes-llm-observability\\nodes\\LmChatVllmLangfuse\\LmChatVllmLangfuseLight.icon.svg\")",
       "Bash(copy \"D:\\Téléchargement\\n8n-nodes-llm-observability\\nodes\\LmChatVllm\\LmChatVllmDark.icon.svg\" \"D:\\Téléchargement\\n8n-nodes-llm-observability\\nodes\\LmChatVllmLangfuse\\LmChatVllmLangfuseDark.icon.svg\")",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm whoami:*)",
+      "Bash(npm publish:*)",
+      "Bash(npm run lintfix:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []
