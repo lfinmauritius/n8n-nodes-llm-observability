@@ -533,6 +533,7 @@ export class AiAgentLlmObs implements INodeType {
 						model = new AzureChatOpenAI({
 							azureOpenAIApiKey: credentials.apiKey as string,
 							azureOpenAIApiDeploymentName: modelName,
+							modelName: modelName, // Force correct model name for Langfuse tracing
 							...(isFullUrl
 								? { azureOpenAIEndpoint: endpoint }
 								: { azureOpenAIApiInstanceName: endpoint }),
