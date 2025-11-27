@@ -798,10 +798,10 @@ export class AiAgentLlmObs implements INodeType {
 				// Debug info for tool binding
 				let toolBindingDebug: any = {};
 
-				// Set callbacks directly on model before any operations
-				if (langfuseCallbacks.length > 0) {
-					model.callbacks = langfuseCallbacks;
-				}
+				// Invoke options for Langfuse
+				const invokeOptions = langfuseCallbacks.length > 0
+					? { callbacks: langfuseCallbacks, runName: llmClassName }
+					: {};
 
 				if (tools && tools.length > 0) {
 					const hasBindTools = typeof model.bindTools === 'function';
@@ -816,7 +816,7 @@ export class AiAgentLlmObs implements INodeType {
 
 					while (iterations < maxIterations) {
 						iterations++;
-						const aiResponse = await modelWithTools.invoke(currentMessages, { runName: llmClassName });
+						const aiResponse = await modelWithTools.invoke(currentMessages, invokeOptions);
 						currentMessages.push(aiResponse);
 
 						const toolCalls = aiResponse.tool_calls || (aiResponse as any).additional_kwargs?.tool_calls;
@@ -870,8 +870,7 @@ export class AiAgentLlmObs implements INodeType {
 						response = currentMessages[currentMessages.length - 1];
 					}
 				} else {
-					// No tools - callbacks already set on model above
-					response = await model.invoke(messages, { runName: llmClassName });
+					response = await model.invoke(messages, invokeOptions);
 				}
 
 				let outputContent = response.content || response.text || response;
