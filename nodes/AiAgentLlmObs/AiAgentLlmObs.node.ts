@@ -77,8 +77,7 @@ export class AiAgentLlmObs implements INodeType {
 			{
 				name: 'langfuseObsApi',
 				displayName: 'Langfuse Credential',
-				required: true,
-				displayOptions: { show: { enableLangfuse: [true] } },
+				required: false,
 			},
 			{
 				name: 'openAiApi',
@@ -382,14 +381,7 @@ export class AiAgentLlmObs implements INodeType {
 					},
 				},
 			},
-			// Langfuse Observability
-			{
-				displayName: 'Enable Langfuse Observability',
-				name: 'enableLangfuse',
-				type: 'boolean',
-				default: false,
-				description: 'Whether to enable Langfuse tracing for this agent',
-			},
+			// Langfuse Options (tracing enabled when credential is configured)
 			{
 				displayName: 'Langfuse Options',
 				name: 'langfuseOptions',
@@ -650,8 +642,7 @@ export class AiAgentLlmObs implements INodeType {
 					systemMessage = (inputData.systemMessage || 'You are a helpful assistant.') as string;
 				}
 
-				// Get Langfuse configuration
-				const enableLangfuse = this.getNodeParameter('enableLangfuse', itemIndex, false) as boolean;
+				// Get Langfuse options
 				const langfuseOptions = this.getNodeParameter('langfuseOptions', itemIndex, {}) as {
 					sessionId?: string;
 					userId?: string;
@@ -666,11 +657,18 @@ export class AiAgentLlmObs implements INodeType {
 					returnIntermediateSteps?: boolean;
 				};
 
-				// Prepare the model with Langfuse if enabled
+				// Prepare the model with Langfuse if credentials are configured
 				let activeModel = model;
 
-				if (enableLangfuse) {
-					const langfuseCredentials = await this.getCredentials('langfuseObsApi');
+				// Try to get Langfuse credentials (optional - tracing enabled when configured)
+				let langfuseCredentials: any = null;
+				try {
+					langfuseCredentials = await this.getCredentials('langfuseObsApi');
+				} catch {
+					// No Langfuse credentials configured, continue without tracing
+				}
+
+				if (langfuseCredentials) {
 					let customMetadata: Record<string, any> = {};
 					if (typeof langfuseOptions.customMetadata === 'string') {
 						try {
