@@ -653,6 +653,7 @@ export class AiAgentLlmObs implements INodeType {
 				);
 				// Normalize tools - they can come as array, single tool, or wrapped in { response: Tool }
 				let tools: Tool[] | undefined;
+				const toolsDebugInfo: any[] = [];
 				if (rawTools) {
 					const toolArray = Array.isArray(rawTools) ? rawTools : [rawTools];
 					tools = toolArray.flatMap((t: any) => {
@@ -662,6 +663,14 @@ export class AiAgentLlmObs implements INodeType {
 						}
 						return t;
 					}).filter((t): t is Tool => t != null);
+					// Collect debug info about detected tools
+					for (const tool of tools) {
+						toolsDebugInfo.push({
+							name: tool.name,
+							description: tool.description?.substring(0, 100),
+							hasInvoke: typeof tool.invoke === 'function',
+						});
+					}
 				}
 
 				const memory = (await this.getInputConnectionData(
@@ -862,6 +871,11 @@ export class AiAgentLlmObs implements INodeType {
 
 				if (agentOptions.returnIntermediateSteps && intermediateSteps.length > 0) {
 					outputJson.intermediateSteps = intermediateSteps;
+				}
+
+				// Add debug info about tools (temporary for debugging)
+				if (toolsDebugInfo.length > 0) {
+					outputJson._toolsDetected = toolsDebugInfo;
 				}
 
 				// Flush Langfuse to ensure traces are sent
