@@ -851,10 +851,18 @@ export class AiAgentLlmObs implements INodeType {
 									if (typeof toolResult === 'string') {
 										formattedResult = toolResult;
 									} else if (Array.isArray(toolResult)) {
-										// Handle array of documents (e.g., from Vector Store)
+										// Handle array of documents
 										formattedResult = toolResult.map((item: any) => {
 											if (item?.pageContent) return item.pageContent;
 											if (item?.text?.pageContent) return item.text.pageContent;
+											return typeof item === 'string' ? item : JSON.stringify(item);
+										}).join('\n\n---\n\n');
+									} else if (toolResult?.content && Array.isArray(toolResult.content)) {
+										// Handle {content: [{type: "text", text: {pageContent: ...}}]} format
+										formattedResult = toolResult.content.map((item: any) => {
+											if (item?.text?.pageContent) return item.text.pageContent;
+											if (item?.pageContent) return item.pageContent;
+											if (typeof item?.text === 'string') return item.text;
 											return typeof item === 'string' ? item : JSON.stringify(item);
 										}).join('\n\n---\n\n');
 									} else if (toolResult?.pageContent) {
