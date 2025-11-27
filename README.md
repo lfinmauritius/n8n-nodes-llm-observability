@@ -186,6 +186,8 @@ Each provider requires its own credentials:
 
 ## Version History
 
+- **v0.10.x** - Bug fixes: trace tool calls as separate spans, handle nested JSON from vector stores
+- **v0.9.x** - Enhanced Langfuse tracing and stability improvements
 - **v0.8.0** - Standalone AI Agent with integrated multi-provider LLM support (no separate LLM node needed)
 - **v0.7.0** - Simplified package: AI Agent with Langfuse + vLLM only
 - **v0.6.0** - AI Agent with integrated observability, custom LLM connection type
