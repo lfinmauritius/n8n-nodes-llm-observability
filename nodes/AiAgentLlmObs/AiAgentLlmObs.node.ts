@@ -75,63 +75,82 @@ export class AiAgentLlmObs implements INodeType {
 		outputs: ['main' as any],
 		credentials: [
 			{
+				name: 'langfuseObsApi',
+				displayName: 'Langfuse Credential',
+				required: true,
+				displayOptions: { show: { enableLangfuse: [true] } },
+			},
+			{
 				name: 'openAiApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['openai', 'openaiCompatible'] } },
 			},
 			{
 				name: 'anthropicApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['anthropic'] } },
 			},
 			{
 				name: 'azureOpenAiApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['azureOpenai'] } },
 			},
 			{
 				name: 'googlePalmApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['gemini'] } },
 			},
 			{
 				name: 'awsApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['bedrock'] } },
 			},
 			{
 				name: 'groqApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['groq'] } },
 			},
 			{
 				name: 'mistralCloudApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['mistral'] } },
 			},
 			{
 				name: 'ollamaApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['ollama'] } },
 			},
 			{
 				name: 'xAiApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['grok'] } },
 			},
 			{
 				name: 'vllmApi',
+				displayName: 'LLM Credential',
 				required: true,
 				displayOptions: { show: { provider: ['vllm'] } },
 			},
-			{
-				name: 'langfuseObsApi',
-				required: true,
-				displayOptions: { show: { enableLangfuse: [true] } },
-			},
 		],
 		properties: [
-			// LLM Provider Selection - MUST be first
+			// Langfuse Observability - at the top so credential appears first
+			{
+				displayName: 'Enable Langfuse Observability',
+				name: 'enableLangfuse',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to enable Langfuse tracing for this agent',
+			},
+			// LLM Provider Selection
 			{
 				displayName: 'LLM Provider',
 				name: 'provider',
@@ -371,14 +390,7 @@ export class AiAgentLlmObs implements INodeType {
 					},
 				},
 			},
-			// Langfuse Observability
-			{
-				displayName: 'Enable Langfuse Observability',
-				name: 'enableLangfuse',
-				type: 'boolean',
-				default: false,
-				description: 'Whether to enable Langfuse tracing for this agent',
-			},
+			// Langfuse Options
 			{
 				displayName: 'Langfuse Options',
 				name: 'langfuseOptions',
