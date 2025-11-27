@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-llm-observability",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "n8n community nodes: Standalone AI Agent with multi-provider LLM support and integrated Langfuse observability",
   "keywords": [
     "n8n-community-node-package",
