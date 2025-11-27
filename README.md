@@ -20,6 +20,7 @@ This package provides **pure LLM nodes** for all major providers, with **modular
 | Google Gemini | LM Chat Google Gemini | Google Gemini API |
 | AWS Bedrock | LM Chat AWS Bedrock | AWS Bedrock API |
 | Groq | LM Chat Groq | Groq API |
+| Grok (xAI) | LM Chat Grok | Grok API |
 | Mistral AI | LM Chat Mistral | Mistral API |
 | Ollama | LM Chat Ollama | Ollama API |
 | Cohere | LM Chat Cohere | Cohere API |
@@ -137,6 +138,9 @@ Example metadata:
 ### Groq
 - **API Key**: Your Groq API key
 
+### Grok (xAI)
+- **API Key**: Your xAI API key from [console.x.ai](https://console.x.ai)
+
 ### Mistral
 - **API Key**: Your Mistral API key
 
@@ -171,6 +175,7 @@ Example metadata:
 
 ## Version History
 
+- **v0.5.0** - Added Grok (xAI) support
 - **v0.4.0** - Simplified architecture: removed legacy integrated nodes, pure modular design
 - **v0.3.0** - Modular architecture: pure LLM nodes + separate observability layer
 - **v0.2.x** - Multi-provider support with integrated Langfuse

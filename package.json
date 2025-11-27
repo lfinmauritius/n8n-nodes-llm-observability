@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-llm-observability",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "n8n community nodes: LLM providers with modular Langfuse observability. Pure LLM nodes + separate observability layer.",
   "keywords": [
     "n8n-community-node-package",
@@ -15,6 +15,8 @@
     "aws",
     "bedrock",
     "groq",
+    "grok",
+    "xai",
     "mistral",
     "ollama",
     "cohere",
@@ -60,7 +62,8 @@
       "dist/credentials/MistralApi.credentials.js",
       "dist/credentials/OllamaApi.credentials.js",
       "dist/credentials/CohereApi.credentials.js",
-      "dist/credentials/VllmApi.credentials.js"
+      "dist/credentials/VllmApi.credentials.js",
+      "dist/credentials/GrokApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/ObservabilityLangfuse/ObservabilityLangfuse.node.js",
@@ -73,7 +76,8 @@
       "dist/nodes/LmChatMistral/LmChatMistral.node.js",
       "dist/nodes/LmChatOllama/LmChatOllama.node.js",
       "dist/nodes/LmChatCohere/LmChatCohere.node.js",
-      "dist/nodes/LmChatVllm/LmChatVllm.node.js"
+      "dist/nodes/LmChatVllm/LmChatVllm.node.js",
+      "dist/nodes/LmChatGrok/LmChatGrok.node.js"
     ]
   },
   "dependencies": {
