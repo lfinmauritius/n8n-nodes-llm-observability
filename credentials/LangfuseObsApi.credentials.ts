@@ -3,11 +3,11 @@ import type {
     INodeProperties,
 } from 'n8n-workflow';
 
-export class LangfuseApi implements ICredentialType {
-    name = 'langfuseApi';
-    icon = 'file:LangfuseApi.credentials.svg' as const;
+export class LangfuseObsApi implements ICredentialType {
+    name = 'langfuseObsApi';
+    icon = 'file:LangfuseObsApi.credentials.svg' as const;
 
-    displayName = 'Langfuse API';
+    displayName = 'Langfuse Observability API';
     documentationUrl = 'https://langfuse.com/docs';
 
     properties: INodeProperties[] = [

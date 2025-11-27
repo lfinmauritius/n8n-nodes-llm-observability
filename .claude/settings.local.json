@@ -25,7 +25,11 @@
       "Bash(npm run lintfix:*)",
       "Bash(npm run lint)",
       "Bash(npm view:*)",
-      "Bash(npm version patch)"
+      "Bash(npm version patch)",
+      "WebFetch(domain:github.com)",
+      "Bash(move:*)",
+      "Bash(ren:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []

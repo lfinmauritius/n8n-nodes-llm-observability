@@ -125,8 +125,8 @@ export class AiAgentLlmObs implements INodeType {
 				displayOptions: { show: { provider: ['vllm'] } },
 			},
 			{
-				name: 'langfuseApi',
-				displayName: 'Langfuse API',
+				name: 'langfuseObsApi',
+				displayName: 'Langfuse Observability API',
 				required: false,
 			},
 		],
@@ -654,7 +654,7 @@ export class AiAgentLlmObs implements INodeType {
 				// Try to get Langfuse credentials (optional)
 				let langfuseCredentials: any = null;
 				try {
-					langfuseCredentials = await this.getCredentials('langfuseApi');
+					langfuseCredentials = await this.getCredentials('langfuseObsApi');
 				} catch {
 					// No Langfuse credentials configured, continue without tracing
 				}
