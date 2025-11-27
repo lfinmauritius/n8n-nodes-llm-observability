@@ -798,16 +798,17 @@ export class AiAgentLlmObs implements INodeType {
 				// Debug info for tool binding
 				let toolBindingDebug: any = {};
 
-				// Invoke options with Langfuse callbacks and correct run name
-				const invokeOptions = langfuseCallbacks.length > 0
-					? { callbacks: langfuseCallbacks, runName: llmClassName }
-					: undefined;
-
 				if (tools && tools.length > 0) {
 					const hasBindTools = typeof model.bindTools === 'function';
 					toolBindingDebug.hasBindTools = hasBindTools;
 
-					const modelWithTools = hasBindTools ? model.bindTools!(tools) : model;
+					// First bind tools, then bind callbacks to preserve both
+					let modelWithTools = hasBindTools ? model.bindTools!(tools) : model;
+
+					// Attach Langfuse callbacks to the model with tools (not via invoke options)
+					if (langfuseCallbacks.length > 0) {
+						modelWithTools = modelWithTools.bind({ callbacks: langfuseCallbacks });
+					}
 					toolBindingDebug.boundTools = hasBindTools;
 
 					const currentMessages = [...messages];
@@ -816,7 +817,7 @@ export class AiAgentLlmObs implements INodeType {
 
 					while (iterations < maxIterations) {
 						iterations++;
-						const aiResponse = await modelWithTools.invoke(currentMessages, invokeOptions);
+						const aiResponse = await modelWithTools.invoke(currentMessages);
 						currentMessages.push(aiResponse);
 
 						const toolCalls = aiResponse.tool_calls || (aiResponse as any).additional_kwargs?.tool_calls;
@@ -870,7 +871,12 @@ export class AiAgentLlmObs implements INodeType {
 						response = currentMessages[currentMessages.length - 1];
 					}
 				} else {
-					response = await model.invoke(messages, invokeOptions);
+					// No tools - attach callbacks directly to model
+					let modelToUse = model;
+					if (langfuseCallbacks.length > 0) {
+						modelToUse = model.bind({ callbacks: langfuseCallbacks }) as typeof model;
+					}
+					response = await modelToUse.invoke(messages);
 				}
 
 				let outputContent = response.content || response.text || response;
