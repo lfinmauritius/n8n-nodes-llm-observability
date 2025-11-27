@@ -8,31 +8,28 @@ npm package: [https://www.npmjs.com/package/n8n-nodes-llm-observability](https:/
 
 ## Overview
 
-This package provides two key components for n8n:
-
-1. **AI Agent via LLM Observability** - A custom AI Agent with integrated Langfuse observability
-2. **vLLM Chat Model** - Support for vLLM (high-throughput LLM serving) - not available in n8n natively
+A standalone AI Agent node for n8n with **multi-provider LLM support** and **integrated Langfuse observability**.
 
 ## Why This Package?
 
-### AI Agent with Langfuse
-The native n8n AI Agent doesn't have built-in Langfuse observability. This package provides an AI Agent that works with **any n8n LLM node** and adds optional Langfuse tracing.
+The native n8n AI Agent requires connecting separate LLM nodes and doesn't have built-in Langfuse observability. This package provides:
 
-### vLLM Support
-n8n doesn't natively support vLLM. This package adds a vLLM Chat Model node for self-hosted high-throughput LLM inference.
+- **All-in-one AI Agent**: Select your LLM provider directly in the node (no separate LLM node needed)
+- **Multi-provider support**: OpenAI, Anthropic, Azure OpenAI, Google Gemini, AWS Bedrock, Groq, Mistral, Ollama, xAI Grok, vLLM, and OpenAI-compatible APIs
+- **Integrated Langfuse tracing**: Optional observability built into the agent
+- **Clean architecture**: One node that doesn't interfere with n8n's native AI components
 
 ## Architecture
 
 ```
-[Any LLM Node] --> [AI Agent via LLM Observability] --> Output
-                              |
-                              v
-                        [Langfuse] (optional)
+[AI Agent via LLM Observability] --> Output
+         |
+         ├── Provider: OpenAI / Anthropic / Azure / Gemini / Bedrock / Groq / Mistral / Ollama / Grok / vLLM
+         ├── Memory (optional)
+         ├── Tools (optional)
+         ├── Output Parser (optional)
+         └── Langfuse (optional)
 ```
-
-Compatible with:
-- All native n8n LLM nodes (OpenAI, Anthropic, Azure, Gemini, Bedrock, Groq, Mistral, Ollama, Cohere, xAI Grok...)
-- The included vLLM Chat Model node
 
 ## Installation
 
@@ -54,19 +51,46 @@ npm install n8n-nodes-llm-observability
 n8n start
 ```
 
-## Nodes
+## Node: AI Agent via LLM Observability
 
-### AI Agent via LLM Observability
+A standalone AI Agent with built-in LLM provider selection and optional Langfuse tracing.
 
-A custom AI Agent that accepts any LLM node and provides optional Langfuse tracing.
+### Supported Providers
 
-**Inputs:**
-- **Model** (required): Any n8n LLM chat model node
-- **Memory** (optional): Standard n8n memory nodes
-- **Tool** (optional): Standard n8n tool nodes
-- **Output Parser** (optional): Standard n8n output parsers
+| Provider | Description |
+|----------|-------------|
+| OpenAI | GPT-4, GPT-4o, GPT-3.5-turbo, etc. |
+| Anthropic | Claude 3.5, Claude 3, etc. |
+| Azure OpenAI | Azure-hosted OpenAI models |
+| Google Gemini | Gemini Pro, Gemini Ultra, etc. |
+| AWS Bedrock | Amazon Bedrock models |
+| Groq | Ultra-fast inference (Llama, Mixtral) |
+| Mistral | Mistral AI models |
+| Ollama | Local models via Ollama |
+| xAI Grok | Grok models |
+| vLLM | High-throughput self-hosted LLM serving |
+| OpenAI Compatible | Any OpenAI-compatible API |
 
-**Configuration:**
+### Inputs
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| Memory | No | Standard n8n memory nodes for conversation history |
+| Tool | No | Standard n8n tool nodes for agent capabilities |
+| Output Parser | No | Standard n8n output parsers |
+
+### Configuration
+
+**Provider Settings:**
+
+| Field | Description |
+|-------|-------------|
+| Provider | Select your LLM provider |
+| Model | Model name (e.g., `gpt-4o`, `claude-3-5-sonnet-20241022`) |
+| Temperature | Creativity (0-2, default: 0.7) |
+| Max Tokens | Maximum response length |
+
+**Prompt Settings:**
 
 | Field | Description |
 |-------|-------------|
@@ -92,55 +116,65 @@ A custom AI Agent that accepts any LLM node and provides optional Langfuse traci
 | Max Iterations | Maximum tool calling iterations (default: 10) |
 | Return Intermediate Steps | Include tool call details in output |
 
-### vLLM Chat Model
-
-High-throughput LLM serving via vLLM's OpenAI-compatible API.
-
-**Configuration:**
-- **Model**: Model name (e.g., `meta-llama/Llama-3.1-8B-Instruct`)
-- **Options**: Temperature, Max Tokens, Top P, Stop Sequences, etc.
-
 ## Credentials
 
-### Langfuse API
+### Provider Credentials
+
+Each provider requires its own credentials:
+
+- **OpenAI**: API Key
+- **Anthropic**: API Key
+- **Azure OpenAI**: Endpoint, API Key, Deployment Name, API Version
+- **Google Gemini**: API Key
+- **AWS Bedrock**: Access Key, Secret Key, Region
+- **Groq**: API Key
+- **Mistral**: API Key
+- **Ollama**: Base URL (default: http://localhost:11434)
+- **xAI Grok**: API Key
+- **vLLM**: Base URL, optional API Key
+- **OpenAI Compatible**: Base URL, API Key
+
+### Langfuse API (Optional)
+
 - **Base URL**: Langfuse instance URL (e.g., `https://cloud.langfuse.com`)
 - **Public Key**: Langfuse public key
 - **Secret Key**: Langfuse secret key
 
-### vLLM API
-- **Base URL**: vLLM server URL (e.g., `http://localhost:8000/v1`)
-- **API Key** (optional): If authentication is enabled
-
 ## Usage Examples
 
-### Basic AI Agent (No Observability)
+### Basic AI Agent
 
-1. Add any LLM node (e.g., n8n's **OpenAI Chat Model**)
-2. Add **AI Agent via LLM Observability**
-3. Connect the LLM to the Agent's Model input
-4. Configure the prompt
+1. Add **AI Agent via LLM Observability**
+2. Select your **Provider** (e.g., OpenAI)
+3. Configure credentials
+4. Enter the **Model** name (e.g., `gpt-4o`)
+5. Configure the prompt
 
 ### AI Agent with Langfuse Tracing
 
 1. Set up as above
-2. In the AI Agent, expand **Observability**
+2. Expand **Observability**
 3. Enable **Enable Langfuse**
 4. Configure Langfuse credentials
 5. Optionally add Session ID, User ID, Tags
 
-### Using vLLM
+### AI Agent with Tools
 
-1. Add **vLLM Chat Model**
+1. Set up the AI Agent
+2. Add n8n tool nodes (Calculator, HTTP Request, Code, etc.)
+3. Connect tools to the **Tool** input
+
+### Using Self-hosted vLLM
+
+1. Select **vLLM** as provider
 2. Configure vLLM credentials (Base URL of your vLLM server)
-3. Enter the model name
-4. Connect to **AI Agent via LLM Observability** or n8n's **AI Agent**
+3. Enter the model name (e.g., `meta-llama/Llama-3.1-8B-Instruct`)
 
 ## Compatibility
 
 - **n8n**: Version 1.0.0 or later
 - **Node.js**: Version 20.15 or later
 - **Langfuse**: Cloud and self-hosted instances
-- **vLLM**: Any vLLM server with OpenAI-compatible API
 
 ## Resources
 
@@ -152,7 +186,8 @@ High-throughput LLM serving via vLLM's OpenAI-compatible API.
 
 ## Version History
 
-- **v0.7.0** - Simplified package: AI Agent with Langfuse + vLLM only (removed redundant LLM nodes)
+- **v0.8.0** - Standalone AI Agent with integrated multi-provider LLM support (no separate LLM node needed)
+- **v0.7.0** - Simplified package: AI Agent with Langfuse + vLLM only
 - **v0.6.0** - AI Agent with integrated observability, custom LLM connection type
 - **v0.5.0** - Added Grok (xAI) support
 - **v0.4.0** - Simplified architecture: removed legacy integrated nodes

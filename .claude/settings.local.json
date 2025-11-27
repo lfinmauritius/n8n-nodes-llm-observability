@@ -23,7 +23,9 @@
       "Bash(npm whoami:*)",
       "Bash(npm publish:*)",
       "Bash(npm run lintfix:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(npm view:*)",
+      "Bash(npm version patch)"
     ],
     "deny": [],
     "ask": []
