@@ -29,7 +29,8 @@
       "WebFetch(domain:github.com)",
       "Bash(move:*)",
       "Bash(ren:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "WebFetch(domain:community.n8n.io)"
     ],
     "deny": [],
     "ask": []

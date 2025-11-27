@@ -75,6 +75,11 @@ export class AiAgentLlmObs implements INodeType {
 		outputs: ['main' as any],
 		credentials: [
 			{
+				name: 'langfuseObsApi',
+				displayName: 'Langfuse Observability API',
+				required: false,
+			},
+			{
 				name: 'openAiApi',
 				required: true,
 				displayOptions: { show: { provider: ['openai', 'openaiCompatible'] } },
@@ -123,11 +128,6 @@ export class AiAgentLlmObs implements INodeType {
 				name: 'vllmApi',
 				required: true,
 				displayOptions: { show: { provider: ['vllm'] } },
-			},
-			{
-				name: 'langfuseObsApi',
-				displayName: 'Langfuse Observability API',
-				required: false,
 			},
 		],
 		properties: [
