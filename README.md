@@ -8,44 +8,31 @@ npm package: [https://www.npmjs.com/package/n8n-nodes-llm-observability](https:/
 
 ## Overview
 
-This package provides a custom **AI Agent with integrated LLM Observability** for n8n. The LLM nodes in this package are designed to work exclusively with the provided AI Agent, which includes built-in Langfuse observability support.
+This package provides two key components for n8n:
 
-**Key Features:**
-- Custom AI Agent with integrated Langfuse observability
-- 11 LLM providers supported
-- LLM nodes work only with the provided AI Agent (not with n8n's default AI Agent)
-- Optional Langfuse tracing - enable it when you need observability
+1. **AI Agent via LLM Observability** - A custom AI Agent with integrated Langfuse observability
+2. **vLLM Chat Model** - Support for vLLM (high-throughput LLM serving) - not available in n8n natively
+
+## Why This Package?
+
+### AI Agent with Langfuse
+The native n8n AI Agent doesn't have built-in Langfuse observability. This package provides an AI Agent that works with **any n8n LLM node** and adds optional Langfuse tracing.
+
+### vLLM Support
+n8n doesn't natively support vLLM. This package adds a vLLM Chat Model node for self-hosted high-throughput LLM inference.
 
 ## Architecture
 
 ```
-[LLM Node] --> [AI Agent via LLM Observability] --> Output
-                    |
-                    v
-              [Langfuse] (optional)
+[Any LLM Node] --> [AI Agent via LLM Observability] --> Output
+                              |
+                              v
+                        [Langfuse] (optional)
 ```
 
-The AI Agent accepts:
-- **Model** (required): One of the LLM nodes from this package
-- **Memory** (optional): Standard n8n memory nodes
-- **Tools** (optional): Standard n8n tool nodes
-- **Output Parser** (optional): Standard n8n output parsers
-
-## Supported LLM Providers
-
-| Provider | Node Name | Credential |
-|----------|-----------|------------|
-| OpenAI | LM Chat OpenAI | OpenAI API |
-| Anthropic | LM Chat Anthropic | Anthropic API |
-| Azure OpenAI | LM Chat Azure OpenAI | Azure OpenAI API |
-| Google Gemini | LM Chat Google Gemini | Google Gemini API |
-| AWS Bedrock | LM Chat AWS Bedrock | AWS Bedrock API |
-| Groq | LM Chat Groq | Groq API |
-| Grok (xAI) | LM Chat Grok | Grok API |
-| Mistral AI | LM Chat Mistral | Mistral API |
-| Ollama | LM Chat Ollama | Ollama API |
-| Cohere | LM Chat Cohere | Cohere API |
-| vLLM | LM Chat vLLM | vLLM API |
+Compatible with:
+- All native n8n LLM nodes (OpenAI, Anthropic, Azure, Gemini, Bedrock, Groq, Mistral, Ollama, Cohere, xAI Grok...)
+- The included vLLM Chat Model node
 
 ## Installation
 
@@ -67,32 +54,27 @@ npm install n8n-nodes-llm-observability
 n8n start
 ```
 
-## Usage
+## Nodes
 
-### Basic Usage (Without Observability)
+### AI Agent via LLM Observability
 
-1. Add an LLM node (e.g., **LM Chat OpenAI**)
-2. Add the **AI Agent via LLM Observability** node
-3. Connect the LLM node to the Agent's Model input
-4. Configure the agent prompt and options
+A custom AI Agent that accepts any LLM node and provides optional Langfuse tracing.
 
-### With Langfuse Observability
+**Inputs:**
+- **Model** (required): Any n8n LLM chat model node
+- **Memory** (optional): Standard n8n memory nodes
+- **Tool** (optional): Standard n8n tool nodes
+- **Output Parser** (optional): Standard n8n output parsers
 
-1. Set up your workflow as above
-2. In the AI Agent node, expand **Observability**
-3. Enable **Enable Langfuse**
-4. Configure your Langfuse credentials
-5. Optionally add Session ID, User ID, Tags, and custom metadata
-
-### Agent Configuration
+**Configuration:**
 
 | Field | Description |
 |-------|-------------|
-| Prompt Type | Choose between "Define Below" or "Take from Previous Node" |
-| System Message | Instructions for the AI agent behavior |
+| Prompt Type | "Define Below" or "Take From Previous Node" |
+| System Message | Instructions for the AI agent |
 | User Message | The user's input/question |
 
-### Observability Options
+**Observability Options:**
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -103,88 +85,77 @@ n8n start
 | Tags | string | Comma-separated tags for filtering |
 | Custom Metadata | JSON | Additional context as JSON |
 
-### Agent Options
+**Agent Options:**
 
 | Field | Description |
 |-------|-------------|
 | Max Iterations | Maximum tool calling iterations (default: 10) |
 | Return Intermediate Steps | Include tool call details in output |
 
-## Credentials Setup
+### vLLM Chat Model
 
-### OpenAI
-- **API Key**: Your OpenAI API key
-- **Organization ID** (optional): Your OpenAI organization
-- **Base URL** (optional): Custom endpoint for OpenAI-compatible APIs
+High-throughput LLM serving via vLLM's OpenAI-compatible API.
 
-### Anthropic
-- **API Key**: Your Anthropic API key
-- **Base URL** (optional): Custom endpoint
+**Configuration:**
+- **Model**: Model name (e.g., `meta-llama/Llama-3.1-8B-Instruct`)
+- **Options**: Temperature, Max Tokens, Top P, Stop Sequences, etc.
 
-### Azure OpenAI
-- **API Key**: Your Azure OpenAI API key
-- **Resource Name**: Your Azure resource name
-- **API Version**: API version (e.g., `2024-02-15-preview`)
-- **Endpoint** (optional): Full endpoint URL
+## Credentials
 
-### Google Gemini
-- **API Key**: Your Google AI Studio API key
-
-### AWS Bedrock
-- **Access Key ID**: AWS access key
-- **Secret Access Key**: AWS secret key
-- **Region**: AWS region (e.g., `us-east-1`)
-
-### Groq
-- **API Key**: Your Groq API key
-
-### Grok (xAI)
-- **API Key**: Your xAI API key from [console.x.ai](https://console.x.ai)
-
-### Mistral
-- **API Key**: Your Mistral API key
-
-### Ollama
-- **Base URL**: Ollama server URL (e.g., `http://localhost:11434`)
-- **API Key** (optional): If authentication is enabled
-
-### Cohere
-- **API Key**: Your Cohere API key
-
-### vLLM
-- **Base URL**: vLLM server URL
-- **API Key** (optional): If authentication is enabled
-
-### Langfuse
+### Langfuse API
 - **Base URL**: Langfuse instance URL (e.g., `https://cloud.langfuse.com`)
 - **Public Key**: Langfuse public key
 - **Secret Key**: Langfuse secret key
 
-## Important Notes
+### vLLM API
+- **Base URL**: vLLM server URL (e.g., `http://localhost:8000/v1`)
+- **API Key** (optional): If authentication is enabled
 
-- **LLM nodes from this package are NOT compatible with n8n's default AI Agent**
-- The custom connection type ensures proper integration with observability features
-- Use the **AI Agent via LLM Observability** node for all AI agent workflows
-- Langfuse is optional - you can use the agent without observability
+## Usage Examples
+
+### Basic AI Agent (No Observability)
+
+1. Add any LLM node (e.g., n8n's **OpenAI Chat Model**)
+2. Add **AI Agent via LLM Observability**
+3. Connect the LLM to the Agent's Model input
+4. Configure the prompt
+
+### AI Agent with Langfuse Tracing
+
+1. Set up as above
+2. In the AI Agent, expand **Observability**
+3. Enable **Enable Langfuse**
+4. Configure Langfuse credentials
+5. Optionally add Session ID, User ID, Tags
+
+### Using vLLM
+
+1. Add **vLLM Chat Model**
+2. Configure vLLM credentials (Base URL of your vLLM server)
+3. Enter the model name
+4. Connect to **AI Agent via LLM Observability** or n8n's **AI Agent**
 
 ## Compatibility
 
 - **n8n**: Version 1.0.0 or later
 - **Node.js**: Version 20.15 or later
 - **Langfuse**: Cloud and self-hosted instances
+- **vLLM**: Any vLLM server with OpenAI-compatible API
 
 ## Resources
 
 - [n8n Community Node Docs](https://docs.n8n.io/integrations/community-nodes/)
 - [Langfuse Documentation](https://docs.langfuse.com/)
+- [vLLM Documentation](https://docs.vllm.ai/)
 - [n8n Community Forum](https://community.n8n.io/)
 - [Ascenzia](https://ascenzia.fr)
 
 ## Version History
 
-- **v0.6.0** - New architecture: AI Agent with integrated observability, custom LLM connection type
+- **v0.7.0** - Simplified package: AI Agent with Langfuse + vLLM only (removed redundant LLM nodes)
+- **v0.6.0** - AI Agent with integrated observability, custom LLM connection type
 - **v0.5.0** - Added Grok (xAI) support
-- **v0.4.0** - Simplified architecture: removed legacy integrated nodes, pure modular design
+- **v0.4.0** - Simplified architecture: removed legacy integrated nodes
 - **v0.3.0** - Modular architecture: pure LLM nodes + separate observability layer
 - **v0.2.x** - Multi-provider support with integrated Langfuse
 - **v0.1.x** - Initial release (OpenAI + Langfuse)

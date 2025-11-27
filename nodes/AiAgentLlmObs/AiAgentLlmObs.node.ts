@@ -42,7 +42,7 @@ export class AiAgentLlmObs implements INodeType {
 			{
 				displayName: 'Model',
 				maxConnections: 1,
-				type: 'ai_languageModel_llmObs' as any,
+				type: 'ai_languageModel' as any,
 				required: true,
 			},
 			{
@@ -204,7 +204,7 @@ export class AiAgentLlmObs implements INodeType {
 			try {
 				// Get the language model from input
 				const model = (await this.getInputConnectionData(
-					'ai_languageModel_llmObs' as any,
+					'ai_languageModel' as any,
 					itemIndex,
 				)) as BaseChatModel;
 

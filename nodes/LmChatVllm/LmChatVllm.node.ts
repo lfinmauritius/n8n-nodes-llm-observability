@@ -26,7 +26,7 @@ export class LmChatVllm implements INodeType {
 		},
 
 		inputs: [],
-		outputs: ['ai_languageModel_llmObs' as any],
+		outputs: ['ai_languageModel' as any],
 		outputNames: ['Model'],
 		credentials: [{ name: 'vllmApi', required: true }],
 		properties: [
