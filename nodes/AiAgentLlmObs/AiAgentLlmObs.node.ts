@@ -396,11 +396,6 @@ export class AiAgentLlmObs implements INodeType {
 				type: 'collection',
 				default: {},
 				placeholder: 'Add Option',
-				displayOptions: {
-					show: {
-						enableLangfuse: [true],
-					},
-				},
 				options: [
 					{
 						displayName: 'Custom Metadata (JSON)',
