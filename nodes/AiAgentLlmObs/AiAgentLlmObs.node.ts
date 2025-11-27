@@ -33,7 +33,8 @@ export class AiAgentLlmObs implements INodeType {
 		name: 'aiAgentLlmObs',
 		icon: { light: 'file:AiAgentLlmObsLight.icon.svg', dark: 'file:AiAgentLlmObsDark.icon.svg' },
 		group: ['transform'],
-		version: [1],
+		version: [1, 2],
+		defaultVersion: 2,
 		description: 'AI Agent with integrated LLM provider and Langfuse observability',
 		defaults: {
 			name: 'AI Agent Langfuse',
