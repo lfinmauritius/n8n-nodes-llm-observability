@@ -713,9 +713,9 @@ export class AiAgentLlmObs implements INodeType {
 					returnIntermediateSteps?: boolean;
 				};
 
-				// Prepare the model with Langfuse if enabled
-				let activeModel = model;
+				// Prepare Langfuse callbacks if enabled
 				const useLangfuse = this.getNodeParameter('useLangfuse', itemIndex, 'no') as string;
+				let langfuseCallbacks: any[] = [];
 
 				if (useLangfuse === 'yes') {
 					const langfuseCredentials = await this.getCredentials('langfuseObsApi');
@@ -750,15 +750,7 @@ export class AiAgentLlmObs implements INodeType {
 						tags,
 					});
 
-					const existingCallbacks = Array.isArray(model.callbacks) ? model.callbacks : [];
-
-					activeModel = model.bind({
-						callbacks: [langfuseHandlerRef, ...existingCallbacks],
-						metadata: {
-							...customMetadata,
-							...(langfuseOptions.traceName ? { trace_name: langfuseOptions.traceName } : {}),
-						},
-					}) as unknown as BaseChatModel;
+					langfuseCallbacks = [langfuseHandlerRef];
 				}
 
 				// Build messages
@@ -789,11 +781,14 @@ export class AiAgentLlmObs implements INodeType {
 				// Debug info for tool binding
 				let toolBindingDebug: any = {};
 
+				// Invoke options with Langfuse callbacks
+				const invokeOptions = langfuseCallbacks.length > 0 ? { callbacks: langfuseCallbacks } : undefined;
+
 				if (tools && tools.length > 0) {
-					const hasBindTools = typeof activeModel.bindTools === 'function';
+					const hasBindTools = typeof model.bindTools === 'function';
 					toolBindingDebug.hasBindTools = hasBindTools;
 
-					const modelWithTools = hasBindTools ? activeModel.bindTools!(tools) : activeModel;
+					const modelWithTools = hasBindTools ? model.bindTools!(tools) : model;
 					toolBindingDebug.boundTools = hasBindTools;
 
 					const currentMessages = [...messages];
@@ -802,7 +797,7 @@ export class AiAgentLlmObs implements INodeType {
 
 					while (iterations < maxIterations) {
 						iterations++;
-						const aiResponse = await modelWithTools.invoke(currentMessages);
+						const aiResponse = await modelWithTools.invoke(currentMessages, invokeOptions);
 						currentMessages.push(aiResponse);
 
 						const toolCalls = aiResponse.tool_calls || (aiResponse as any).additional_kwargs?.tool_calls;
@@ -855,7 +850,7 @@ export class AiAgentLlmObs implements INodeType {
 						response = currentMessages[currentMessages.length - 1];
 					}
 				} else {
-					response = await activeModel.invoke(messages);
+					response = await model.invoke(messages, invokeOptions);
 				}
 
 				let outputContent = response.content || response.text || response;
