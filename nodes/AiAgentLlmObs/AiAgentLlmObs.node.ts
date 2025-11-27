@@ -126,6 +126,7 @@ export class AiAgentLlmObs implements INodeType {
 			},
 			{
 				name: 'langfuseApi',
+				displayName: 'Langfuse API',
 				required: false,
 			},
 		],
