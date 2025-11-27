@@ -30,7 +30,8 @@
       "Bash(move:*)",
       "Bash(ren:*)",
       "Bash(git mv:*)",
-      "WebFetch(domain:community.n8n.io)"
+      "WebFetch(domain:community.n8n.io)",
+      "WebFetch(domain:medium.com)"
     ],
     "deny": [],
     "ask": []

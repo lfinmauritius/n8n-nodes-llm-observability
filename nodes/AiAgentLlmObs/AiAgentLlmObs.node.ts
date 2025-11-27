@@ -75,11 +75,6 @@ export class AiAgentLlmObs implements INodeType {
 		outputs: ['main' as any],
 		credentials: [
 			{
-				name: 'langfuseObsApi',
-				displayName: 'Langfuse Observability API',
-				required: false,
-			},
-			{
 				name: 'openAiApi',
 				required: true,
 				displayOptions: { show: { provider: ['openai', 'openaiCompatible'] } },
@@ -128,6 +123,11 @@ export class AiAgentLlmObs implements INodeType {
 				name: 'vllmApi',
 				required: true,
 				displayOptions: { show: { provider: ['vllm'] } },
+			},
+			{
+				name: 'langfuseObsApi',
+				required: true,
+				displayOptions: { show: { enableLangfuse: [true] } },
 			},
 		],
 		properties: [
@@ -371,14 +371,25 @@ export class AiAgentLlmObs implements INodeType {
 					},
 				},
 			},
-			// Langfuse Options (credential is always visible, tracing enabled when credential is set)
+			// Langfuse Observability
+			{
+				displayName: 'Enable Langfuse Observability',
+				name: 'enableLangfuse',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to enable Langfuse tracing for this agent',
+			},
 			{
 				displayName: 'Langfuse Options',
 				name: 'langfuseOptions',
 				type: 'collection',
 				default: {},
 				placeholder: 'Add Option',
-				description: 'Configure Langfuse tracing options. Tracing is enabled when Langfuse credentials are set.',
+				displayOptions: {
+					show: {
+						enableLangfuse: [true],
+					},
+				},
 				options: [
 					{
 						displayName: 'Custom Metadata (JSON)',
@@ -633,7 +644,8 @@ export class AiAgentLlmObs implements INodeType {
 					systemMessage = (inputData.systemMessage || 'You are a helpful assistant.') as string;
 				}
 
-				// Get Langfuse options
+				// Get Langfuse configuration
+				const enableLangfuse = this.getNodeParameter('enableLangfuse', itemIndex, false) as boolean;
 				const langfuseOptions = this.getNodeParameter('langfuseOptions', itemIndex, {}) as {
 					sessionId?: string;
 					userId?: string;
@@ -648,18 +660,11 @@ export class AiAgentLlmObs implements INodeType {
 					returnIntermediateSteps?: boolean;
 				};
 
-				// Prepare the model with Langfuse if credentials are configured
+				// Prepare the model with Langfuse if enabled
 				let activeModel = model;
 
-				// Try to get Langfuse credentials (optional)
-				let langfuseCredentials: any = null;
-				try {
-					langfuseCredentials = await this.getCredentials('langfuseObsApi');
-				} catch {
-					// No Langfuse credentials configured, continue without tracing
-				}
-
-				if (langfuseCredentials) {
+				if (enableLangfuse) {
+					const langfuseCredentials = await this.getCredentials('langfuseObsApi');
 					let customMetadata: Record<string, any> = {};
 					if (typeof langfuseOptions.customMetadata === 'string') {
 						try {
