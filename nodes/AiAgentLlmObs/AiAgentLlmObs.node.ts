@@ -483,6 +483,9 @@ export class AiAgentLlmObs implements INodeType {
 		const returnData: INodeExecutionData[] = [];
 
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+			// Declare langfuseHandlerRef outside try block so it's accessible in catch
+			let langfuseHandlerRef: CallbackHandler | null = null;
+
 			try {
 				// Get provider and model configuration
 				const provider = this.getNodeParameter('provider', itemIndex) as string;
@@ -681,6 +684,7 @@ export class AiAgentLlmObs implements INodeType {
 					tags?: string;
 				};
 
+
 				// Get agent options
 				const agentOptions = this.getNodeParameter('agentOptions', itemIndex, {}) as {
 					maxIterations?: number;
@@ -710,20 +714,24 @@ export class AiAgentLlmObs implements INodeType {
 						? langfuseOptions.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
 						: undefined;
 
-					const langfuseHandler = new CallbackHandler({
+					langfuseHandlerRef = new CallbackHandler({
 						baseUrl: langfuseCredentials.baseUrl as string,
 						publicKey: langfuseCredentials.publicKey as string,
 						secretKey: langfuseCredentials.secretKey as string,
 						sessionId: langfuseOptions.sessionId || undefined,
 						userId: langfuseOptions.userId || undefined,
-						metadata: customMetadata,
+						metadata: {
+							...customMetadata,
+							model: modelName,
+							provider: provider,
+						},
 						tags,
 					});
 
 					const existingCallbacks = Array.isArray(model.callbacks) ? model.callbacks : [];
 
 					activeModel = model.bind({
-						callbacks: [langfuseHandler, ...existingCallbacks],
+						callbacks: [langfuseHandlerRef, ...existingCallbacks],
 						metadata: {
 							...customMetadata,
 							...(langfuseOptions.traceName ? { trace_name: langfuseOptions.traceName } : {}),
@@ -843,12 +851,29 @@ export class AiAgentLlmObs implements INodeType {
 					outputJson.intermediateSteps = intermediateSteps;
 				}
 
+				// Flush Langfuse to ensure traces are sent
+				if (langfuseHandlerRef) {
+					try {
+						await langfuseHandlerRef.flushAsync();
+					} catch {
+						// Ignore flush errors - traces may still be sent
+					}
+				}
+
 				returnData.push({
 					json: outputJson,
 					pairedItem: { item: itemIndex },
 				});
 
 			} catch (error: any) {
+				// Try to flush Langfuse even on error
+				if (langfuseHandlerRef) {
+					try {
+						await langfuseHandlerRef.flushAsync();
+					} catch {
+						// Ignore flush errors
+					}
+				}
 				if (this.continueOnFail()) {
 					returnData.push({
 						json: { error: error.message },
