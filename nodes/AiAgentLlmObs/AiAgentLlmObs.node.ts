@@ -333,25 +333,6 @@ export class AiAgentLlmObs implements INodeType {
 					},
 				],
 			},
-			// Langfuse Observability
-			{
-				displayName: 'Enable Langfuse Observability',
-				name: 'enableLangfuse',
-				type: 'options',
-				noDataExpression: true,
-				options: [
-					{
-						name: 'No',
-						value: false,
-					},
-					{
-						name: 'Yes',
-						value: true,
-					},
-				],
-				default: false,
-				description: 'Whether to enable Langfuse tracing for this agent',
-			},
 			// Prompt Configuration
 			{
 				displayName: 'Prompt',
@@ -401,7 +382,14 @@ export class AiAgentLlmObs implements INodeType {
 					},
 				},
 			},
-			// Langfuse Options
+			// Langfuse Observability
+			{
+				displayName: 'Enable Langfuse Observability',
+				name: 'enableLangfuse',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to enable Langfuse tracing for this agent',
+			},
 			{
 				displayName: 'Langfuse Options',
 				name: 'langfuseOptions',
