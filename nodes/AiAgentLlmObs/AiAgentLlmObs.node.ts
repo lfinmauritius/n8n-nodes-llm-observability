@@ -798,17 +798,16 @@ export class AiAgentLlmObs implements INodeType {
 				// Debug info for tool binding
 				let toolBindingDebug: any = {};
 
+				// Set callbacks directly on model before any operations
+				if (langfuseCallbacks.length > 0) {
+					model.callbacks = langfuseCallbacks;
+				}
+
 				if (tools && tools.length > 0) {
 					const hasBindTools = typeof model.bindTools === 'function';
 					toolBindingDebug.hasBindTools = hasBindTools;
 
-					// First bind tools, then bind callbacks to preserve both
-					let modelWithTools = hasBindTools ? model.bindTools!(tools) : model;
-
-					// Attach Langfuse callbacks to the model with tools (not via invoke options)
-					if (langfuseCallbacks.length > 0) {
-						modelWithTools = modelWithTools.bind({ callbacks: langfuseCallbacks });
-					}
+					const modelWithTools = hasBindTools ? model.bindTools!(tools) : model;
 					toolBindingDebug.boundTools = hasBindTools;
 
 					const currentMessages = [...messages];
@@ -817,7 +816,7 @@ export class AiAgentLlmObs implements INodeType {
 
 					while (iterations < maxIterations) {
 						iterations++;
-						const aiResponse = await modelWithTools.invoke(currentMessages);
+						const aiResponse = await modelWithTools.invoke(currentMessages, { runName: llmClassName });
 						currentMessages.push(aiResponse);
 
 						const toolCalls = aiResponse.tool_calls || (aiResponse as any).additional_kwargs?.tool_calls;
@@ -871,12 +870,8 @@ export class AiAgentLlmObs implements INodeType {
 						response = currentMessages[currentMessages.length - 1];
 					}
 				} else {
-					// No tools - attach callbacks directly to model
-					let modelToUse = model;
-					if (langfuseCallbacks.length > 0) {
-						modelToUse = model.bind({ callbacks: langfuseCallbacks }) as typeof model;
-					}
-					response = await modelToUse.invoke(messages);
+					// No tools - callbacks already set on model above
+					response = await model.invoke(messages, { runName: llmClassName });
 				}
 
 				let outputContent = response.content || response.text || response;
