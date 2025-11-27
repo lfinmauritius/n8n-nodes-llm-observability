@@ -36,7 +36,7 @@ export class LmChatGroq implements INodeType {
 		},
 
 		inputs: [],
-		outputs: ['ai_languageModel' as any],
+		outputs: ['ai_languageModel_llmObs' as any],
 		outputNames: ['Model'],
 		credentials: [{ name: 'groqApi', required: true }],
 		properties: [

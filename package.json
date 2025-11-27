@@ -1,9 +1,10 @@
 {
   "name": "n8n-nodes-llm-observability",
-  "version": "0.5.0",
-  "description": "n8n community nodes: LLM providers with modular Langfuse observability. Pure LLM nodes + separate observability layer.",
+  "version": "0.6.0",
+  "description": "n8n community nodes: AI Agent with integrated LLM Observability. LLM nodes + AI Agent with Langfuse support.",
   "keywords": [
     "n8n-community-node-package",
+    "ai-agent",
     "langfuse",
     "langchain",
     "openai",
@@ -66,7 +67,7 @@
       "dist/credentials/GrokApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/ObservabilityLangfuse/ObservabilityLangfuse.node.js",
+      "dist/nodes/AiAgentLlmObs/AiAgentLlmObs.node.js",
       "dist/nodes/LmChatOpenAi/LmChatOpenAi.node.js",
       "dist/nodes/LmChatAnthropic/LmChatAnthropic.node.js",
       "dist/nodes/LmChatAzureOpenAi/LmChatAzureOpenAi.node.js",

@@ -26,7 +26,7 @@ export class LmChatOllama implements INodeType {
 		},
 
 		inputs: [],
-		outputs: ['ai_languageModel' as any],
+		outputs: ['ai_languageModel_llmObs' as any],
 		outputNames: ['Model'],
 		credentials: [{ name: 'ollamaApi', required: true }],
 		properties: [

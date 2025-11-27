@@ -8,7 +8,28 @@ npm package: [https://www.npmjs.com/package/n8n-nodes-llm-observability](https:/
 
 ## Overview
 
-This package provides **pure LLM nodes** for all major providers, with **modular observability** support. The key innovation is the separation of LLM functionality from observability - you can use any LLM provider independently, and optionally add tracing by connecting through an observability node.
+This package provides a custom **AI Agent with integrated LLM Observability** for n8n. The LLM nodes in this package are designed to work exclusively with the provided AI Agent, which includes built-in Langfuse observability support.
+
+**Key Features:**
+- Custom AI Agent with integrated Langfuse observability
+- 11 LLM providers supported
+- LLM nodes work only with the provided AI Agent (not with n8n's default AI Agent)
+- Optional Langfuse tracing - enable it when you need observability
+
+## Architecture
+
+```
+[LLM Node] --> [AI Agent via LLM Observability] --> Output
+                    |
+                    v
+              [Langfuse] (optional)
+```
+
+The AI Agent accepts:
+- **Model** (required): One of the LLM nodes from this package
+- **Memory** (optional): Standard n8n memory nodes
+- **Tools** (optional): Standard n8n tool nodes
+- **Output Parser** (optional): Standard n8n output parsers
 
 ## Supported LLM Providers
 
@@ -25,34 +46,6 @@ This package provides **pure LLM nodes** for all major providers, with **modular
 | Ollama | LM Chat Ollama | Ollama API |
 | Cohere | LM Chat Cohere | Cohere API |
 | vLLM | LM Chat vLLM | vLLM API |
-
-## Observability
-
-| Provider | Node Name | Credential |
-|----------|-----------|------------|
-| Langfuse | Langfuse Observability | Langfuse API |
-
-More observability providers coming soon (LangSmith, Phoenix, Helicone...)
-
-## Architecture
-
-### Without Observability
-
-Use LLM nodes directly connected to your AI Agent:
-
-```
-[LLM Node] --> [AI Agent]
-```
-
-### With Observability
-
-Add observability by connecting through the Observability node:
-
-```
-[LLM Node] --> [Langfuse Observability] --> [AI Agent]
-```
-
-The observability node intercepts LLM calls and sends traces to your observability platform without modifying the LLM behavior.
 
 ## Installation
 
@@ -76,39 +69,46 @@ n8n start
 
 ## Usage
 
-### Basic Usage (No Observability)
+### Basic Usage (Without Observability)
 
 1. Add an LLM node (e.g., **LM Chat OpenAI**)
-2. Configure the credentials
-3. Connect directly to your **AI Agent**
+2. Add the **AI Agent via LLM Observability** node
+3. Connect the LLM node to the Agent's Model input
+4. Configure the agent prompt and options
 
 ### With Langfuse Observability
 
-1. Add an LLM node (e.g., **LM Chat OpenAI**)
-2. Add a **Langfuse Observability** node
-3. Connect: `LLM Node --> Langfuse Observability --> AI Agent`
-4. Configure both credentials
+1. Set up your workflow as above
+2. In the AI Agent node, expand **Observability**
+3. Enable **Enable Langfuse**
+4. Configure your Langfuse credentials
+5. Optionally add Session ID, User ID, Tags, and custom metadata
 
-### Langfuse Metadata
+### Agent Configuration
 
-The Langfuse Observability node supports metadata injection:
+| Field | Description |
+|-------|-------------|
+| Prompt Type | Choose between "Define Below" or "Take from Previous Node" |
+| System Message | Instructions for the AI agent behavior |
+| User Message | The user's input/question |
+
+### Observability Options
 
 | Field | Type | Description |
 |-------|------|-------------|
+| Enable Langfuse | boolean | Turn on/off Langfuse tracing |
 | Session ID | string | Group related traces together |
 | User ID | string | Identify the end user |
 | Trace Name | string | Custom name for the trace |
 | Tags | string | Comma-separated tags for filtering |
 | Custom Metadata | JSON | Additional context as JSON |
 
-Example metadata:
-```json
-{
-  "project": "customer-support",
-  "env": "production",
-  "workflow": "ticket-classification"
-}
-```
+### Agent Options
+
+| Field | Description |
+|-------|-------------|
+| Max Iterations | Maximum tool calling iterations (default: 10) |
+| Return Intermediate Steps | Include tool call details in output |
 
 ## Credentials Setup
 
@@ -160,6 +160,13 @@ Example metadata:
 - **Public Key**: Langfuse public key
 - **Secret Key**: Langfuse secret key
 
+## Important Notes
+
+- **LLM nodes from this package are NOT compatible with n8n's default AI Agent**
+- The custom connection type ensures proper integration with observability features
+- Use the **AI Agent via LLM Observability** node for all AI agent workflows
+- Langfuse is optional - you can use the agent without observability
+
 ## Compatibility
 
 - **n8n**: Version 1.0.0 or later
@@ -175,6 +182,7 @@ Example metadata:
 
 ## Version History
 
+- **v0.6.0** - New architecture: AI Agent with integrated observability, custom LLM connection type
 - **v0.5.0** - Added Grok (xAI) support
 - **v0.4.0** - Simplified architecture: removed legacy integrated nodes, pure modular design
 - **v0.3.0** - Modular architecture: pure LLM nodes + separate observability layer

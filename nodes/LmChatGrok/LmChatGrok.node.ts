@@ -42,7 +42,7 @@ export class LmChatGrok implements INodeType {
 		},
 
 		inputs: [],
-		outputs: ['ai_languageModel' as any],
+		outputs: ['ai_languageModel_llmObs' as any],
 		outputNames: ['Model'],
 		credentials: [{ name: 'grokApi', required: true }],
 		properties: [
