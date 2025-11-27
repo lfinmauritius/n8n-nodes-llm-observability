@@ -821,8 +821,11 @@ export class AiAgentLlmObs implements INodeType {
 
 							if (tool) {
 								try {
-									// Don't pass Langfuse callbacks to tools - it creates duplicate traces
-									const toolResult = await tool.invoke(toolArgs);
+									// Pass Langfuse callbacks to trace tool as separate span
+									const toolResult = await tool.invoke(toolArgs, {
+										callbacks: langfuseCallbacks,
+										runName: toolName,
+									});
 
 									// Helper to extract pageContent from various formats
 									const extractContent = (data: any): string => {
