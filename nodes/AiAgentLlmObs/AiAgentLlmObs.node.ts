@@ -811,8 +811,11 @@ export class AiAgentLlmObs implements INodeType {
 							break;
 						}
 
+						const { ToolMessage } = await import('@langchain/core/messages');
+
 						for (const toolCall of toolCalls) {
 							const toolName = toolCall.name || toolCall.function?.name;
+							const toolCallId = toolCall.id || toolName;
 							const toolArgs = toolCall.args || (toolCall.function?.arguments ? JSON.parse(toolCall.function.arguments) : {});
 							const tool = tools.find((t) => t.name === toolName);
 
@@ -820,10 +823,6 @@ export class AiAgentLlmObs implements INodeType {
 								try {
 									// Don't pass Langfuse callbacks to tools - it creates duplicate traces
 									const toolResult = await tool.invoke(toolArgs);
-
-									// Debug: log raw toolResult structure
-									console.log('DEBUG toolResult type:', typeof toolResult);
-									console.log('DEBUG toolResult:', JSON.stringify(toolResult, null, 2));
 
 									intermediateSteps.push({
 										action: { tool: toolName, toolInput: toolArgs },
@@ -855,17 +854,33 @@ export class AiAgentLlmObs implements INodeType {
 										formattedResult = JSON.stringify(toolResult);
 									}
 
-									const { ToolMessage } = await import('@langchain/core/messages');
 									currentMessages.push(new ToolMessage({
 										content: formattedResult,
-										tool_call_id: toolCall.id || toolName,
+										tool_call_id: toolCallId,
 									}));
 								} catch (error: any) {
+									const errorMessage = `Error: ${error.message}`;
 									intermediateSteps.push({
 										action: { tool: toolName, toolInput: toolArgs },
-										observation: `Error: ${error.message}`,
+										observation: errorMessage,
 									});
+									// Must still push a ToolMessage even on error
+									currentMessages.push(new ToolMessage({
+										content: errorMessage,
+										tool_call_id: toolCallId,
+									}));
 								}
+							} else {
+								// Tool not found - still need to respond to the tool_call
+								const errorMessage = `Tool "${toolName}" not found`;
+								intermediateSteps.push({
+									action: { tool: toolName, toolInput: toolArgs },
+									observation: errorMessage,
+								});
+								currentMessages.push(new ToolMessage({
+									content: errorMessage,
+									tool_call_id: toolCallId,
+								}));
 							}
 						}
 
