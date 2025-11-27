@@ -846,9 +846,26 @@ export class AiAgentLlmObs implements INodeType {
 										observation: toolResult,
 									});
 
+									// Format tool result for cleaner display
+									let formattedResult: string;
+									if (typeof toolResult === 'string') {
+										formattedResult = toolResult;
+									} else if (Array.isArray(toolResult)) {
+										// Handle array of documents (e.g., from Vector Store)
+										formattedResult = toolResult.map((item: any) => {
+											if (item?.pageContent) return item.pageContent;
+											if (item?.text?.pageContent) return item.text.pageContent;
+											return typeof item === 'string' ? item : JSON.stringify(item);
+										}).join('\n\n---\n\n');
+									} else if (toolResult?.pageContent) {
+										formattedResult = toolResult.pageContent;
+									} else {
+										formattedResult = JSON.stringify(toolResult);
+									}
+
 									const { ToolMessage } = await import('@langchain/core/messages');
 									currentMessages.push(new ToolMessage({
-										content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
+										content: formattedResult,
 										tool_call_id: toolCall.id || toolName,
 									}));
 								} catch (error: any) {
