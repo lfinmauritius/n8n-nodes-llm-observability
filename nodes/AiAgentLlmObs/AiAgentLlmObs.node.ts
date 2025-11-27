@@ -78,7 +78,6 @@ export class AiAgentLlmObs implements INodeType {
 				name: 'langfuseObsApi',
 				displayName: 'Langfuse Credential',
 				required: true,
-				displayOptions: { show: { useLangfuse: ['yes'] } },
 			},
 			{
 				name: 'openAiApi',
@@ -142,25 +141,6 @@ export class AiAgentLlmObs implements INodeType {
 			},
 		],
 		properties: [
-			// Langfuse toggle - must be first for credential displayOptions
-			{
-				displayName: 'Use Langfuse Observability',
-				name: 'useLangfuse',
-				type: 'options',
-				noDataExpression: true,
-				options: [
-					{
-						name: 'No',
-						value: 'no',
-					},
-					{
-						name: 'Yes',
-						value: 'yes',
-					},
-				],
-				default: 'no',
-				description: 'Enable Langfuse tracing for this agent',
-			},
 			// LLM Provider Selection
 			{
 				displayName: 'LLM Provider',
@@ -408,11 +388,6 @@ export class AiAgentLlmObs implements INodeType {
 				type: 'collection',
 				default: {},
 				placeholder: 'Add Option',
-				displayOptions: {
-					show: {
-						useLangfuse: ['yes'],
-					},
-				},
 				options: [
 					{
 						displayName: 'Custom Metadata (JSON)',
@@ -713,10 +688,6 @@ export class AiAgentLlmObs implements INodeType {
 					returnIntermediateSteps?: boolean;
 				};
 
-				// Prepare Langfuse callbacks if enabled
-				const useLangfuse = this.getNodeParameter('useLangfuse', itemIndex, 'no') as string;
-				let langfuseCallbacks: any[] = [];
-
 				// Map provider to LangChain class name for Langfuse
 				const providerToClassName: Record<string, string> = {
 					openai: 'ChatOpenAI',
@@ -733,42 +704,41 @@ export class AiAgentLlmObs implements INodeType {
 				};
 				const llmClassName = providerToClassName[provider] || provider;
 
-				if (useLangfuse === 'yes') {
-					const langfuseCredentials = await this.getCredentials('langfuseObsApi');
-					let customMetadata: Record<string, any> = {};
-					if (typeof langfuseOptions.customMetadata === 'string') {
-						try {
-							customMetadata = langfuseOptions.customMetadata.trim()
-								? jsonParse<Record<string, any>>(langfuseOptions.customMetadata)
-								: {};
-						} catch {
-							customMetadata = { _raw: langfuseOptions.customMetadata };
-						}
-					} else if (langfuseOptions.customMetadata && typeof langfuseOptions.customMetadata === 'object') {
-						customMetadata = langfuseOptions.customMetadata;
+				// Initialize Langfuse handler
+				const langfuseCredentials = await this.getCredentials('langfuseObsApi');
+				let customMetadata: Record<string, any> = {};
+				if (typeof langfuseOptions.customMetadata === 'string') {
+					try {
+						customMetadata = langfuseOptions.customMetadata.trim()
+							? jsonParse<Record<string, any>>(langfuseOptions.customMetadata)
+							: {};
+					} catch {
+						customMetadata = { _raw: langfuseOptions.customMetadata };
 					}
-
-					const tags = langfuseOptions.tags
-						? langfuseOptions.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
-						: undefined;
-
-					langfuseHandlerRef = new CallbackHandler({
-						baseUrl: langfuseCredentials.baseUrl as string,
-						publicKey: langfuseCredentials.publicKey as string,
-						secretKey: langfuseCredentials.secretKey as string,
-						sessionId: langfuseOptions.sessionId || undefined,
-						userId: langfuseOptions.userId || undefined,
-						metadata: {
-							...customMetadata,
-							model: modelName,
-							provider: provider,
-							llmClass: llmClassName,
-						},
-						tags,
-					});
-
-					langfuseCallbacks = [langfuseHandlerRef];
+				} else if (langfuseOptions.customMetadata && typeof langfuseOptions.customMetadata === 'object') {
+					customMetadata = langfuseOptions.customMetadata;
 				}
+
+				const tags = langfuseOptions.tags
+					? langfuseOptions.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+					: undefined;
+
+				langfuseHandlerRef = new CallbackHandler({
+					baseUrl: langfuseCredentials.baseUrl as string,
+					publicKey: langfuseCredentials.publicKey as string,
+					secretKey: langfuseCredentials.secretKey as string,
+					sessionId: langfuseOptions.sessionId || undefined,
+					userId: langfuseOptions.userId || undefined,
+					metadata: {
+						...customMetadata,
+						model: modelName,
+						provider: provider,
+						llmClass: llmClassName,
+					},
+					tags,
+				});
+
+				const langfuseCallbacks = [langfuseHandlerRef];
 
 				// Build messages
 				const messages: BaseMessage[] = [];
@@ -798,10 +768,8 @@ export class AiAgentLlmObs implements INodeType {
 				// Debug info for tool binding
 				let toolBindingDebug: any = {};
 
-				// Invoke options for Langfuse
-				const invokeOptions = langfuseCallbacks.length > 0
-					? { callbacks: langfuseCallbacks, runName: llmClassName }
-					: {};
+				// Invoke options with Langfuse callbacks
+				const invokeOptions = { callbacks: langfuseCallbacks, runName: llmClassName };
 
 				if (tools && tools.length > 0) {
 					const hasBindTools = typeof model.bindTools === 'function';
