@@ -1,13 +1,14 @@
 {
   "name": "n8n-nodes-llm-observability",
   "version": "0.10.38",
-  "description": "n8n community nodes: Standalone AI Agent with multi-provider LLM support and integrated Langfuse/Phoenix observability",
+  "description": "n8n community nodes: Standalone AI Agent with multi-provider LLM support and integrated Langfuse/Phoenix/Helicone observability",
   "keywords": [
     "n8n-community-node-package",
     "ai-agent",
     "langfuse",
     "phoenix",
     "arize",
+    "helicone",
     "langchain",
     "openai",
     "anthropic",
@@ -72,13 +73,21 @@
       "dist/credentials/GrokPhoenixApi.credentials.js",
       "dist/credentials/VllmPhoenixApi.credentials.js",
       "dist/credentials/OpenAiCompatiblePhoenixApi.credentials.js",
-      "dist/credentials/QdrantPhoenixApi.credentials.js"
+      "dist/credentials/QdrantPhoenixApi.credentials.js",
+      "dist/credentials/OpenAiHeliconeApi.credentials.js",
+      "dist/credentials/AnthropicHeliconeApi.credentials.js",
+      "dist/credentials/AzureOpenAiHeliconeApi.credentials.js",
+      "dist/credentials/GeminiHeliconeApi.credentials.js",
+      "dist/credentials/GroqHeliconeApi.credentials.js",
+      "dist/credentials/MistralHeliconeApi.credentials.js",
+      "dist/credentials/OpenAiCompatibleHeliconeApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/AiAgentLlmObs/AiAgentLlmObs.node.js",
       "dist/nodes/ToolQdrantSearchLangfuse/ToolQdrantSearchLangfuse.node.js",
       "dist/nodes/AiAgentPhoenix/AiAgentPhoenix.node.js",
-      "dist/nodes/ToolQdrantSearchPhoenix/ToolQdrantSearchPhoenix.node.js"
+      "dist/nodes/ToolQdrantSearchPhoenix/ToolQdrantSearchPhoenix.node.js",
+      "dist/nodes/AiAgentHelicone/AiAgentHelicone.node.js"
     ]
   },
   "dependencies": {

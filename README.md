@@ -8,7 +8,7 @@ npm package: [https://www.npmjs.com/package/n8n-nodes-llm-observability](https:/
 
 ## Overview
 
-Standalone AI Agent nodes for n8n with **multi-provider LLM support** and **integrated observability** (Langfuse or Arize Phoenix).
+Standalone AI Agent nodes for n8n with **multi-provider LLM support** and **integrated observability** (Langfuse, Arize Phoenix, or Helicone).
 
 ## Why This Package?
 
@@ -16,7 +16,7 @@ The native n8n AI Agent requires connecting separate LLM nodes and doesn't have 
 
 - **All-in-one AI Agent**: Select your LLM provider directly in the node (no separate LLM node needed)
 - **Multi-provider support**: OpenAI, Anthropic, Azure OpenAI, Google Gemini, AWS Bedrock, Groq, Mistral, Ollama, xAI Grok, vLLM, and OpenAI-compatible APIs
-- **Integrated observability**: Choose between Langfuse or Arize Phoenix for tracing
+- **Integrated observability**: Choose between Langfuse, Arize Phoenix, or Helicone for tracing
 - **Token usage tracking**: Token consumption displayed in n8n logs and available in workflow output
 - **Clean architecture**: Nodes that don't interfere with n8n's native AI components
 
@@ -26,19 +26,20 @@ The native n8n AI Agent requires connecting separate LLM nodes and doesn't have 
 |------|-------------|
 | **AI Agent Langfuse** | AI Agent with integrated Langfuse tracing |
 | **AI Agent Phoenix** | AI Agent with integrated Arize Phoenix tracing (OpenTelemetry) |
+| **AI Agent Helicone** | AI Agent with integrated Helicone observability (proxy-based) |
 | **Qdrant Search Tool (Langfuse)** | Vector search tool with Langfuse observability |
 | **Qdrant Search Tool (Phoenix)** | Vector search tool with Phoenix observability |
 
 ## Architecture
 
 ```
-[AI Agent Langfuse / Phoenix] --> Output (with token usage)
+[AI Agent Langfuse / Phoenix / Helicone] --> Output (with token usage)
          |
          ├── Provider: OpenAI / Anthropic / Azure / Gemini / Bedrock / Groq / Mistral / Ollama / Grok / vLLM / OpenAI Compatible
          ├── Memory (optional)
          ├── Tools (optional)
          ├── Output Parser (optional)
-         └── Observability: Langfuse or Phoenix
+         └── Observability: Langfuse, Phoenix, or Helicone
 ```
 
 ## Installation
@@ -113,6 +114,20 @@ Each provider has a combined credential that includes both the LLM provider sett
 - **OpenAI Compatible + Phoenix API**
 - **Qdrant + Phoenix API** (for Qdrant Search Tool)
 
+### Helicone Credentials
+
+Each provider has a combined credential that includes both the LLM provider settings and Helicone configuration:
+
+- **OpenAI + Helicone API**
+- **Anthropic + Helicone API**
+- **Azure OpenAI + Helicone API**
+- **Google Gemini + Helicone API**
+- **Groq + Helicone API**
+- **Mistral + Helicone API**
+- **OpenAI Compatible + Helicone API**
+
+> **Note**: Helicone works as a proxy - requests are routed through Helicone's servers for observability without requiring SDK changes.
+
 ## Configuration
 
 ### Provider Settings
@@ -149,6 +164,14 @@ Each provider has a combined credential that includes both the LLM provider sett
 | Session ID | string | Group related traces together |
 | User ID | string | Identify the end user |
 | Tags | string | Comma-separated tags for filtering |
+
+### Helicone Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Session ID | string | Group related requests into a session |
+| User ID | string | Identify the end user |
+| Custom Properties | key-value | Add custom properties to requests (e.g., environment, app version) |
 
 ### Agent Options
 
@@ -205,9 +228,18 @@ The node outputs:
 4. Enter the **Model** name
 5. Configure the prompt
 
+### AI Agent with Helicone
+
+1. Add **AI Agent Helicone** node
+2. Select your **Provider** (OpenAI, Anthropic, Azure, Gemini, Groq, Mistral)
+3. Configure credentials (includes Helicone API key)
+4. Enter the **Model** name
+5. Configure the prompt
+6. Optionally add Session ID, User ID, or Custom Properties
+
 ### AI Agent with Tools
 
-1. Set up the AI Agent (Langfuse or Phoenix)
+1. Set up the AI Agent (Langfuse, Phoenix, or Helicone)
 2. Add n8n tool nodes (Calculator, HTTP Request, Code, Qdrant Search, etc.)
 3. Connect tools to the **Tool** input
 
@@ -229,18 +261,21 @@ The node outputs:
 - **Node.js**: Version 20.15 or later
 - **Langfuse**: Cloud and self-hosted instances
 - **Arize Phoenix**: Cloud and self-hosted instances
+- **Helicone**: Cloud instance (helicone.ai)
 
 ## Resources
 
 - [n8n Community Node Docs](https://docs.n8n.io/integrations/community-nodes/)
 - [Langfuse Documentation](https://langfuse.com/docs)
 - [Arize Phoenix Documentation](https://docs.arize.com/phoenix)
+- [Helicone Documentation](https://docs.helicone.ai)
 - [vLLM Documentation](https://docs.vllm.ai/)
 - [n8n Community Forum](https://community.n8n.io/)
 - [Ascenzia](https://ascenzia.fr)
 
 ## Version History
 
+- **v0.10.39** - Add Helicone observability support (AI Agent Helicone node)
 - **v0.10.38** - Fix: accumulate token usage across all LLM calls (when using tools)
 - **v0.10.37** - Add token usage to output and n8n AI logs panel
 - **v0.10.36** - Update Phoenix logos to official Arize branding
