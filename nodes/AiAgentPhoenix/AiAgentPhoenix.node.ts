@@ -482,7 +482,7 @@ export class AiAgentPhoenix implements INodeType {
 				let response: any;
 				const intermediateSteps: any[] = [];
 
-				await tracer.startActiveSpan('agent', { kind: SpanKind.INTERNAL }, async (agentSpan) => {
+				await tracer.startActiveSpan(`agent_${provider}`, { kind: SpanKind.INTERNAL }, async (agentSpan) => {
 					// Set OpenInference attributes for AGENT span
 					agentSpan.setAttribute(OPENINFERENCE.SPAN_KIND, SPAN_KIND.AGENT);
 					agentSpan.setAttribute(OPENINFERENCE.INPUT_VALUE, userMessage);
