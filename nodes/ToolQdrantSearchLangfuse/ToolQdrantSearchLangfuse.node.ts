@@ -4,9 +4,10 @@ import type {
 	INodeTypeDescription,
 	SupplyData,
 } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 import { DynamicTool } from '@langchain/core/tools';
+import type { Embeddings } from '@langchain/core/embeddings';
 import { Langfuse } from 'langfuse';
-import { OpenAIEmbeddings } from '@langchain/openai';
 import { QdrantClient } from '@qdrant/js-client-rest';
 
 export class ToolQdrantSearchLangfuse implements INodeType {
@@ -33,7 +34,14 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 				],
 			},
 		},
-		inputs: [],
+		inputs: [
+			{
+				displayName: 'Embedding',
+				maxConnections: 1,
+				type: 'ai_embedding' as any,
+				required: true,
+			},
+		],
 		outputs: ['ai_tool'] as any,
 		outputNames: ['Tool'],
 		credentials: [
@@ -69,13 +77,6 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 				default: '',
 				required: true,
 				description: 'Name of the Qdrant collection to search',
-			},
-			{
-				displayName: 'Embedding Model',
-				name: 'embeddingModel',
-				type: 'string',
-				default: 'text-embedding-3-small',
-				description: 'OpenAI embedding model to use',
 			},
 			{
 				displayName: 'Options',
@@ -144,11 +145,22 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {
 		const credentials = await this.getCredentials('qdrantOpenAiLangfuseApi');
 
+		// Get connected embedding model
+		const embeddingsInput = await this.getInputConnectionData(
+			'ai_embedding' as any,
+			itemIndex,
+		);
+
+		// Handle wrapped embedding response
+		const embeddings = (embeddingsInput as any)?.response ?? embeddingsInput as Embeddings;
+		if (!embeddings) {
+			throw new NodeOperationError(this.getNode(), 'No embedding model connected');
+		}
+
 		// Get node parameters
 		const toolName = this.getNodeParameter('toolName', itemIndex) as string;
 		const toolDescription = this.getNodeParameter('toolDescription', itemIndex) as string;
 		const collectionName = this.getNodeParameter('collectionName', itemIndex) as string;
-		const embeddingModel = this.getNodeParameter('embeddingModel', itemIndex) as string;
 		const options = this.getNodeParameter('options', itemIndex, {}) as {
 			topK?: number;
 			scoreThreshold?: number;
@@ -181,15 +193,6 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 			? langfuseOptions.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
 			: undefined;
 
-		// Initialize OpenAI Embeddings
-		const embeddings = new OpenAIEmbeddings({
-			apiKey: credentials.openAiApiKey as string,
-			model: embeddingModel,
-			configuration: credentials.openAiBaseUrl
-				? { baseURL: credentials.openAiBaseUrl as string }
-				: undefined,
-		});
-
 		// Create the search tool
 		const searchTool = new DynamicTool({
 			name: toolName,
@@ -203,7 +206,6 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 					tags,
 					metadata: {
 						collection: collectionName,
-						embeddingModel,
 						topK,
 					},
 				});
@@ -213,7 +215,6 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 					const embeddingSpan = trace.span({
 						name: 'embedding',
 						metadata: {
-							model: embeddingModel,
 							query,
 						},
 					});

@@ -2,7 +2,7 @@ import type { ICredentialType, INodeProperties } from 'n8n-workflow';
 
 export class QdrantOpenAiLangfuseApi implements ICredentialType {
 	name = 'qdrantOpenAiLangfuseApi';
-	displayName = 'Qdrant + OpenAI + Langfuse API';
+	displayName = 'Qdrant + Langfuse API';
 	documentationUrl = 'https://qdrant.tech/documentation/';
 
 	properties: INodeProperties[] = [
@@ -22,23 +22,6 @@ export class QdrantOpenAiLangfuseApi implements ICredentialType {
 			typeOptions: { password: true },
 			default: '',
 			description: 'API key for Qdrant (optional for local instances)',
-		},
-		// OpenAI Embeddings Configuration
-		{
-			displayName: 'OpenAI API Key',
-			name: 'openAiApiKey',
-			type: 'string',
-			typeOptions: { password: true },
-			required: true,
-			default: '',
-			description: 'OpenAI API key for generating embeddings',
-		},
-		{
-			displayName: 'OpenAI Base URL (optional)',
-			name: 'openAiBaseUrl',
-			type: 'string',
-			default: '',
-			description: 'Custom base URL for OpenAI API (for compatible endpoints)',
 		},
 		// Langfuse Configuration
 		{
