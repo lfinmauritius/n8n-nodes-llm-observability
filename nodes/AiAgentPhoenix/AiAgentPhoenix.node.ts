@@ -5,7 +5,7 @@ import type {
 	INodeTypeDescription,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { ChatOpenAI } from '@langchain/openai';
+import { ChatOpenAI, AzureChatOpenAI } from '@langchain/openai';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Tool } from '@langchain/core/tools';
 import type { BaseOutputParser } from '@langchain/core/output_parsers';
@@ -19,6 +19,7 @@ import { Resource } from '@opentelemetry/resources';
 
 const LLM_PROVIDERS = [
 	{ name: 'OpenAI', value: 'openai' },
+	{ name: 'Azure OpenAI', value: 'azureOpenai' },
 	{ name: 'Anthropic', value: 'anthropic' },
 	{ name: 'Ollama', value: 'ollama' },
 	{ name: 'OpenAI Compatible', value: 'openaiCompatible' },
@@ -78,6 +79,12 @@ export class AiAgentPhoenix implements INodeType {
 				displayOptions: { show: { provider: ['openai'] } },
 			},
 			{
+				name: 'azureOpenAiPhoenixApi',
+				displayName: 'Azure OpenAI + Phoenix API',
+				required: true,
+				displayOptions: { show: { provider: ['azureOpenai'] } },
+			},
+			{
 				name: 'anthropicPhoenixApi',
 				displayName: 'Anthropic + Phoenix API',
 				required: true,
@@ -114,6 +121,15 @@ export class AiAgentPhoenix implements INodeType {
 				default: 'gpt-4o-mini',
 				description: 'The model to use',
 				displayOptions: { show: { provider: ['openai'] } },
+			},
+			{
+				displayName: 'Deployment Name',
+				name: 'model',
+				type: 'string',
+				default: '',
+				required: true,
+				description: 'The deployment name of your Azure OpenAI model',
+				displayOptions: { show: { provider: ['azureOpenai'] } },
 			},
 			{
 				displayName: 'Model',
@@ -279,7 +295,17 @@ export class AiAgentPhoenix implements INodeType {
 				};
 
 				// Get credentials based on provider
-				const credentialName = provider === 'anthropic' ? 'anthropicPhoenixApi' : 'openAiPhoenixApi';
+				let credentialName: string;
+				switch (provider) {
+					case 'anthropic':
+						credentialName = 'anthropicPhoenixApi';
+						break;
+					case 'azureOpenai':
+						credentialName = 'azureOpenAiPhoenixApi';
+						break;
+					default:
+						credentialName = 'openAiPhoenixApi';
+				}
 				const credentials = await this.getCredentials(credentialName);
 
 				// Initialize OpenTelemetry tracer for Phoenix
@@ -313,6 +339,17 @@ export class AiAgentPhoenix implements INodeType {
 							temperature: modelOptions.temperature ?? 0.7,
 							maxTokens: modelOptions.maxTokens ?? 4096,
 							configuration: credentials.url ? { baseURL: credentials.url as string } : undefined,
+						});
+						break;
+					}
+					case 'azureOpenai': {
+						model = new AzureChatOpenAI({
+							azureOpenAIApiKey: credentials.apiKey as string,
+							azureOpenAIApiDeploymentName: modelName,
+							azureOpenAIApiVersion: credentials.apiVersion as string,
+							azureOpenAIBasePath: `${credentials.endpoint}/openai/deployments`,
+							temperature: modelOptions.temperature ?? 0.7,
+							maxTokens: modelOptions.maxTokens ?? 4096,
 						});
 						break;
 					}

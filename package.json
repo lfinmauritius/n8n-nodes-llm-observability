@@ -63,6 +63,7 @@
       "dist/credentials/PhoenixApi.credentials.js",
       "dist/credentials/OpenAiPhoenixApi.credentials.js",
       "dist/credentials/AnthropicPhoenixApi.credentials.js",
+      "dist/credentials/AzureOpenAiPhoenixApi.credentials.js",
       "dist/credentials/QdrantPhoenixApi.credentials.js"
     ],
     "nodes": [
