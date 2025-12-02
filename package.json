@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-llm-observability",
-  "version": "0.10.34",
+  "version": "0.10.35",
   "description": "n8n community nodes: Standalone AI Agent with multi-provider LLM support and integrated Langfuse/Phoenix observability",
   "keywords": [
     "n8n-community-node-package",
@@ -64,6 +64,14 @@
       "dist/credentials/OpenAiPhoenixApi.credentials.js",
       "dist/credentials/AnthropicPhoenixApi.credentials.js",
       "dist/credentials/AzureOpenAiPhoenixApi.credentials.js",
+      "dist/credentials/GeminiPhoenixApi.credentials.js",
+      "dist/credentials/BedrockPhoenixApi.credentials.js",
+      "dist/credentials/GroqPhoenixApi.credentials.js",
+      "dist/credentials/MistralPhoenixApi.credentials.js",
+      "dist/credentials/OllamaPhoenixApi.credentials.js",
+      "dist/credentials/GrokPhoenixApi.credentials.js",
+      "dist/credentials/VllmPhoenixApi.credentials.js",
+      "dist/credentials/OpenAiCompatiblePhoenixApi.credentials.js",
       "dist/credentials/QdrantPhoenixApi.credentials.js"
     ],
     "nodes": [

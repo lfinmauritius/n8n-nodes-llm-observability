@@ -50,9 +50,15 @@ const SPAN_KIND = {
 
 const LLM_PROVIDERS = [
 	{ name: 'OpenAI', value: 'openai' },
-	{ name: 'Azure OpenAI', value: 'azureOpenai' },
 	{ name: 'Anthropic', value: 'anthropic' },
+	{ name: 'Azure OpenAI', value: 'azureOpenai' },
+	{ name: 'Google Gemini', value: 'gemini' },
+	{ name: 'AWS Bedrock', value: 'bedrock' },
+	{ name: 'Groq', value: 'groq' },
+	{ name: 'Mistral', value: 'mistral' },
 	{ name: 'Ollama', value: 'ollama' },
+	{ name: 'xAI Grok', value: 'grok' },
+	{ name: 'vLLM', value: 'vllm' },
 	{ name: 'OpenAI Compatible', value: 'openaiCompatible' },
 ];
 
@@ -110,25 +116,61 @@ export class AiAgentPhoenix implements INodeType {
 				displayOptions: { show: { provider: ['openai'] } },
 			},
 			{
-				name: 'azureOpenAiPhoenixApi',
-				displayName: 'Azure OpenAI + Phoenix API',
-				required: true,
-				displayOptions: { show: { provider: ['azureOpenai'] } },
-			},
-			{
 				name: 'anthropicPhoenixApi',
 				displayName: 'Anthropic + Phoenix API',
 				required: true,
 				displayOptions: { show: { provider: ['anthropic'] } },
 			},
 			{
-				name: 'openAiPhoenixApi',
+				name: 'azureOpenAiPhoenixApi',
+				displayName: 'Azure OpenAI + Phoenix API',
+				required: true,
+				displayOptions: { show: { provider: ['azureOpenai'] } },
+			},
+			{
+				name: 'geminiPhoenixApi',
+				displayName: 'Google Gemini + Phoenix API',
+				required: true,
+				displayOptions: { show: { provider: ['gemini'] } },
+			},
+			{
+				name: 'bedrockPhoenixApi',
+				displayName: 'AWS Bedrock + Phoenix API',
+				required: true,
+				displayOptions: { show: { provider: ['bedrock'] } },
+			},
+			{
+				name: 'groqPhoenixApi',
+				displayName: 'Groq + Phoenix API',
+				required: true,
+				displayOptions: { show: { provider: ['groq'] } },
+			},
+			{
+				name: 'mistralPhoenixApi',
+				displayName: 'Mistral + Phoenix API',
+				required: true,
+				displayOptions: { show: { provider: ['mistral'] } },
+			},
+			{
+				name: 'ollamaPhoenixApi',
 				displayName: 'Ollama + Phoenix API',
 				required: true,
 				displayOptions: { show: { provider: ['ollama'] } },
 			},
 			{
-				name: 'openAiPhoenixApi',
+				name: 'grokPhoenixApi',
+				displayName: 'xAI Grok + Phoenix API',
+				required: true,
+				displayOptions: { show: { provider: ['grok'] } },
+			},
+			{
+				name: 'vllmPhoenixApi',
+				displayName: 'vLLM + Phoenix API',
+				required: true,
+				displayOptions: { show: { provider: ['vllm'] } },
+			},
+			{
+				name: 'openAiCompatiblePhoenixApi',
 				displayName: 'OpenAI Compatible + Phoenix API',
 				required: true,
 				displayOptions: { show: { provider: ['openaiCompatible'] } },
@@ -154,6 +196,14 @@ export class AiAgentPhoenix implements INodeType {
 				displayOptions: { show: { provider: ['openai'] } },
 			},
 			{
+				displayName: 'Model',
+				name: 'model',
+				type: 'string',
+				default: 'claude-3-5-sonnet-latest',
+				description: 'The model to use',
+				displayOptions: { show: { provider: ['anthropic'] } },
+			},
+			{
 				displayName: 'Deployment Name',
 				name: 'model',
 				type: 'string',
@@ -166,9 +216,33 @@ export class AiAgentPhoenix implements INodeType {
 				displayName: 'Model',
 				name: 'model',
 				type: 'string',
-				default: 'claude-3-5-sonnet-latest',
+				default: 'gemini-2.0-flash',
 				description: 'The model to use',
-				displayOptions: { show: { provider: ['anthropic'] } },
+				displayOptions: { show: { provider: ['gemini'] } },
+			},
+			{
+				displayName: 'Model',
+				name: 'model',
+				type: 'string',
+				default: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+				description: 'The Bedrock model ID',
+				displayOptions: { show: { provider: ['bedrock'] } },
+			},
+			{
+				displayName: 'Model',
+				name: 'model',
+				type: 'string',
+				default: 'llama-3.3-70b-versatile',
+				description: 'The model to use',
+				displayOptions: { show: { provider: ['groq'] } },
+			},
+			{
+				displayName: 'Model',
+				name: 'model',
+				type: 'string',
+				default: 'mistral-small-latest',
+				description: 'The model to use',
+				displayOptions: { show: { provider: ['mistral'] } },
 			},
 			{
 				displayName: 'Model',
@@ -182,6 +256,23 @@ export class AiAgentPhoenix implements INodeType {
 				displayName: 'Model',
 				name: 'model',
 				type: 'string',
+				default: 'grok-2-1212',
+				description: 'The model to use',
+				displayOptions: { show: { provider: ['grok'] } },
+			},
+			{
+				displayName: 'Model',
+				name: 'model',
+				type: 'string',
+				default: '',
+				placeholder: 'meta-llama/Llama-3.1-8B-Instruct',
+				description: 'The model to use',
+				displayOptions: { show: { provider: ['vllm'] } },
+			},
+			{
+				displayName: 'Model',
+				name: 'model',
+				type: 'string',
 				default: '',
 				description: 'The model to use',
 				displayOptions: { show: { provider: ['openaiCompatible'] } },
@@ -190,10 +281,10 @@ export class AiAgentPhoenix implements INodeType {
 				displayName: 'Base URL',
 				name: 'baseUrl',
 				type: 'string',
-				default: 'http://localhost:11434/v1',
-				placeholder: 'http://localhost:11434/v1',
-				description: 'The base URL of the API',
-				displayOptions: { show: { provider: ['ollama'] } },
+				default: '',
+				placeholder: 'http://localhost:8000/v1',
+				description: 'The base URL of the vLLM server',
+				displayOptions: { show: { provider: ['vllm'] } },
 			},
 			{
 				displayName: 'Base URL',
@@ -326,17 +417,20 @@ export class AiAgentPhoenix implements INodeType {
 				};
 
 				// Get credentials based on provider
-				let credentialName: string;
-				switch (provider) {
-					case 'anthropic':
-						credentialName = 'anthropicPhoenixApi';
-						break;
-					case 'azureOpenai':
-						credentialName = 'azureOpenAiPhoenixApi';
-						break;
-					default:
-						credentialName = 'openAiPhoenixApi';
-				}
+				const credentialMap: Record<string, string> = {
+					openai: 'openAiPhoenixApi',
+					anthropic: 'anthropicPhoenixApi',
+					azureOpenai: 'azureOpenAiPhoenixApi',
+					gemini: 'geminiPhoenixApi',
+					bedrock: 'bedrockPhoenixApi',
+					groq: 'groqPhoenixApi',
+					mistral: 'mistralPhoenixApi',
+					ollama: 'ollamaPhoenixApi',
+					grok: 'grokPhoenixApi',
+					vllm: 'vllmPhoenixApi',
+					openaiCompatible: 'openAiCompatiblePhoenixApi',
+				};
+				const credentialName = credentialMap[provider] || 'openAiPhoenixApi';
 				const credentials = await this.getCredentials(credentialName);
 
 				// Initialize OpenTelemetry tracer for Phoenix
@@ -369,7 +463,16 @@ export class AiAgentPhoenix implements INodeType {
 							model: modelName,
 							temperature: modelOptions.temperature ?? 0.7,
 							maxTokens: modelOptions.maxTokens ?? 4096,
-							configuration: credentials.url ? { baseURL: credentials.url as string } : undefined,
+						});
+						break;
+					}
+					case 'anthropic': {
+						const { ChatAnthropic } = await import('@langchain/anthropic');
+						model = new ChatAnthropic({
+							anthropicApiKey: credentials.apiKey as string,
+							model: modelName,
+							temperature: modelOptions.temperature ?? 0.7,
+							maxTokens: modelOptions.maxTokens ?? 4096,
 						});
 						break;
 					}
@@ -386,10 +489,44 @@ export class AiAgentPhoenix implements INodeType {
 						});
 						break;
 					}
-					case 'anthropic': {
-						const { ChatAnthropic } = await import('@langchain/anthropic');
-						model = new ChatAnthropic({
-							anthropicApiKey: credentials.apiKey as string,
+					case 'gemini': {
+						const { ChatGoogleGenerativeAI } = await import('@langchain/google-genai');
+						model = new ChatGoogleGenerativeAI({
+							apiKey: credentials.apiKey as string,
+							model: modelName,
+							temperature: modelOptions.temperature ?? 0.7,
+							maxOutputTokens: modelOptions.maxTokens ?? 4096,
+						});
+						break;
+					}
+					case 'bedrock': {
+						const { ChatBedrockConverse } = await import('@langchain/aws');
+						model = new ChatBedrockConverse({
+							model: modelName,
+							region: credentials.region as string,
+							credentials: {
+								accessKeyId: credentials.accessKeyId as string,
+								secretAccessKey: credentials.secretAccessKey as string,
+							},
+							temperature: modelOptions.temperature ?? 0.7,
+							maxTokens: modelOptions.maxTokens ?? 4096,
+						});
+						break;
+					}
+					case 'groq': {
+						const { ChatGroq } = await import('@langchain/groq');
+						model = new ChatGroq({
+							apiKey: credentials.apiKey as string,
+							model: modelName,
+							temperature: modelOptions.temperature ?? 0.7,
+							maxTokens: modelOptions.maxTokens ?? 4096,
+						});
+						break;
+					}
+					case 'mistral': {
+						const { ChatMistralAI } = await import('@langchain/mistralai');
+						model = new ChatMistralAI({
+							apiKey: credentials.apiKey as string,
 							model: modelName,
 							temperature: modelOptions.temperature ?? 0.7,
 							maxTokens: modelOptions.maxTokens ?? 4096,
@@ -397,13 +534,33 @@ export class AiAgentPhoenix implements INodeType {
 						break;
 					}
 					case 'ollama': {
-						const baseUrl = this.getNodeParameter('baseUrl', itemIndex, 'http://localhost:11434/v1') as string;
 						model = new ChatOpenAI({
 							apiKey: 'ollama',
 							model: modelName,
 							temperature: modelOptions.temperature ?? 0.7,
 							maxTokens: modelOptions.maxTokens ?? 4096,
-							configuration: { baseURL: baseUrl },
+							configuration: { baseURL: credentials.baseUrl as string },
+						});
+						break;
+					}
+					case 'grok': {
+						model = new ChatOpenAI({
+							apiKey: credentials.apiKey as string,
+							model: modelName,
+							temperature: modelOptions.temperature ?? 0.7,
+							maxTokens: modelOptions.maxTokens ?? 4096,
+							configuration: { baseURL: 'https://api.x.ai/v1' },
+						});
+						break;
+					}
+					case 'vllm': {
+						const baseUrl = this.getNodeParameter('baseUrl', itemIndex) as string;
+						model = new ChatOpenAI({
+							apiKey: (credentials.apiKey as string) || 'vllm',
+							model: modelName,
+							temperature: modelOptions.temperature ?? 0.7,
+							maxTokens: modelOptions.maxTokens ?? 4096,
+							configuration: { baseURL: baseUrl || credentials.baseUrl as string },
 						});
 						break;
 					}
@@ -414,7 +571,7 @@ export class AiAgentPhoenix implements INodeType {
 							model: modelName,
 							temperature: modelOptions.temperature ?? 0.7,
 							maxTokens: modelOptions.maxTokens ?? 4096,
-							configuration: { baseURL: baseUrl },
+							configuration: { baseURL: baseUrl || credentials.baseUrl as string },
 						});
 						break;
 					}
