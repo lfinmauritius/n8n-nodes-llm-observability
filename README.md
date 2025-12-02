@@ -8,48 +8,38 @@ npm package: [https://www.npmjs.com/package/n8n-nodes-llm-observability](https:/
 
 ## Overview
 
-A standalone AI Agent node for n8n with **multi-provider LLM support** and **integrated Langfuse observability**.
+Standalone AI Agent nodes for n8n with **multi-provider LLM support** and **integrated observability** (Langfuse or Arize Phoenix).
 
 ## Why This Package?
 
-The native n8n AI Agent requires connecting separate LLM nodes and doesn't have built-in Langfuse observability. This package provides:
+The native n8n AI Agent requires connecting separate LLM nodes and doesn't have built-in observability. This package provides:
 
 - **All-in-one AI Agent**: Select your LLM provider directly in the node (no separate LLM node needed)
 - **Multi-provider support**: OpenAI, Anthropic, Azure OpenAI, Google Gemini, AWS Bedrock, Groq, Mistral, Ollama, xAI Grok, vLLM, and OpenAI-compatible APIs
-- **Integrated Langfuse tracing**: Optional observability built into the agent
-- **Clean architecture**: One node that doesn't interfere with n8n's native AI components
+- **Integrated observability**: Choose between Langfuse or Arize Phoenix for tracing
+- **Token usage tracking**: Token consumption displayed in n8n logs and available in workflow output
+- **Clean architecture**: Nodes that don't interfere with n8n's native AI components
+
+## Nodes
+
+| Node | Description |
+|------|-------------|
+| **AI Agent Langfuse** | AI Agent with integrated Langfuse tracing |
+| **AI Agent Phoenix** | AI Agent with integrated Arize Phoenix tracing (OpenTelemetry) |
+| **Qdrant Search Tool (Langfuse)** | Vector search tool with Langfuse observability |
+| **Qdrant Search Tool (Phoenix)** | Vector search tool with Phoenix observability |
 
 ## Architecture
 
 ```
-[AI Agent via LLM Observability] --> Output
+[AI Agent Langfuse / Phoenix] --> Output (with token usage)
          |
-         ├── Provider: OpenAI / Anthropic / Azure / Gemini / Bedrock / Groq / Mistral / Ollama / Grok / vLLM
+         ├── Provider: OpenAI / Anthropic / Azure / Gemini / Bedrock / Groq / Mistral / Ollama / Grok / vLLM / OpenAI Compatible
          ├── Memory (optional)
          ├── Tools (optional)
          ├── Output Parser (optional)
-         └── Langfuse (optional)
+         └── Observability: Langfuse or Phoenix
 ```
-
-## Arize Phoenix Support (Beta)
-
-This package also includes **AI Agent Phoenix** node for [Arize Phoenix](https://arize.com/phoenix/) observability integration.
-
-> **Note:** The Phoenix integration is currently in **beta**. It supports OpenAI, Azure OpenAI, Anthropic, Ollama, and OpenAI-compatible providers with OpenTelemetry-based tracing.
-
-### Phoenix Nodes
-
-| Node | Description |
-|------|-------------|
-| AI Agent Phoenix | AI Agent with integrated Phoenix tracing |
-| Qdrant Search Tool (Phoenix) | Vector search tool with Phoenix observability |
-
-### Phoenix Credentials
-
-- **OpenAI + Phoenix API**
-- **Azure OpenAI + Phoenix API**
-- **Anthropic + Phoenix API**
-- **Qdrant + Phoenix API**
 
 ## Installation
 
@@ -71,25 +61,101 @@ npm install n8n-nodes-llm-observability
 n8n start
 ```
 
-## Node: AI Agent via LLM Observability
-
-A standalone AI Agent with built-in LLM provider selection and optional Langfuse tracing.
-
-### Supported Providers
+## Supported Providers
 
 | Provider | Description |
 |----------|-------------|
-| OpenAI | GPT-4, GPT-4o, GPT-3.5-turbo, etc. |
+| OpenAI | GPT-4, GPT-4o, GPT-3.5-turbo, o1, etc. |
 | Anthropic | Claude 3.5, Claude 3, etc. |
 | Azure OpenAI | Azure-hosted OpenAI models |
-| Google Gemini | Gemini Pro, Gemini Ultra, etc. |
-| AWS Bedrock | Amazon Bedrock models |
+| Google Gemini | Gemini Pro, Gemini Flash, etc. |
+| AWS Bedrock | Amazon Bedrock models (Claude, Llama, etc.) |
 | Groq | Ultra-fast inference (Llama, Mixtral) |
 | Mistral | Mistral AI models |
 | Ollama | Local models via Ollama |
 | xAI Grok | Grok models |
 | vLLM | High-throughput self-hosted LLM serving |
 | OpenAI Compatible | Any OpenAI-compatible API |
+
+## Credentials
+
+### Langfuse Credentials
+
+Each provider has a combined credential that includes both the LLM provider settings and Langfuse configuration:
+
+- **OpenAI + Langfuse API**
+- **Anthropic + Langfuse API**
+- **Azure OpenAI + Langfuse API**
+- **Google Gemini + Langfuse API**
+- **AWS Bedrock + Langfuse API**
+- **Groq + Langfuse API**
+- **Mistral + Langfuse API**
+- **Ollama + Langfuse API**
+- **xAI Grok + Langfuse API**
+- **vLLM + Langfuse API**
+- **OpenAI Compatible + Langfuse API**
+- **Qdrant + OpenAI + Langfuse API** (for Qdrant Search Tool)
+
+### Phoenix Credentials
+
+Each provider has a combined credential that includes both the LLM provider settings and Phoenix configuration:
+
+- **OpenAI + Phoenix API**
+- **Anthropic + Phoenix API**
+- **Azure OpenAI + Phoenix API**
+- **Google Gemini + Phoenix API**
+- **AWS Bedrock + Phoenix API**
+- **Groq + Phoenix API**
+- **Mistral + Phoenix API**
+- **Ollama + Phoenix API**
+- **xAI Grok + Phoenix API**
+- **vLLM + Phoenix API**
+- **OpenAI Compatible + Phoenix API**
+- **Qdrant + Phoenix API** (for Qdrant Search Tool)
+
+## Configuration
+
+### Provider Settings
+
+| Field | Description |
+|-------|-------------|
+| Provider | Select your LLM provider |
+| Model | Model name (e.g., `gpt-4o`, `claude-3-5-sonnet-20241022`) |
+| Temperature | Creativity (0-2, default: 0.7) |
+| Max Tokens | Maximum response length |
+
+### Prompt Settings
+
+| Field | Description |
+|-------|-------------|
+| Prompt Type | "Define Below" or "Take From Previous Node" |
+| System Message | Instructions for the AI agent |
+| User Message | The user's input/question |
+
+### Langfuse Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Session ID | string | Group related traces together |
+| User ID | string | Identify the end user |
+| Trace Name | string | Custom name for the trace |
+| Tags | string | Comma-separated tags for filtering |
+| Custom Metadata | JSON | Additional context as JSON |
+
+### Phoenix Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Session ID | string | Group related traces together |
+| User ID | string | Identify the end user |
+| Tags | string | Comma-separated tags for filtering |
+
+### Agent Options
+
+| Field | Description |
+|-------|-------------|
+| Max Iterations | Maximum tool calling iterations (default: 10) |
+| Return Intermediate Steps | Include tool call details in output |
 
 ### Inputs
 
@@ -99,90 +165,57 @@ A standalone AI Agent with built-in LLM provider selection and optional Langfuse
 | Tool | No | Standard n8n tool nodes for agent capabilities |
 | Output Parser | No | Standard n8n output parsers |
 
-### Configuration
+## Output
 
-**Provider Settings:**
+The node outputs:
 
-| Field | Description |
-|-------|-------------|
-| Provider | Select your LLM provider |
-| Model | Model name (e.g., `gpt-4o`, `claude-3-5-sonnet-20241022`) |
-| Temperature | Creativity (0-2, default: 0.7) |
-| Max Tokens | Maximum response length |
+```json
+{
+  "output": "The AI response...",
+  "tokenUsage": {
+    "promptTokens": 150,
+    "completionTokens": 250,
+    "totalTokens": 400
+  },
+  "intermediateSteps": [...]
+}
+```
 
-**Prompt Settings:**
+- **output**: The AI agent's response
+- **tokenUsage**: Token consumption (accumulated across all LLM calls when using tools)
+- **intermediateSteps**: Tool call details (when enabled)
 
-| Field | Description |
-|-------|-------------|
-| Prompt Type | "Define Below" or "Take From Previous Node" |
-| System Message | Instructions for the AI agent |
-| User Message | The user's input/question |
-
-**Observability Options:**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| Enable Langfuse | boolean | Turn on/off Langfuse tracing |
-| Session ID | string | Group related traces together |
-| User ID | string | Identify the end user |
-| Trace Name | string | Custom name for the trace |
-| Tags | string | Comma-separated tags for filtering |
-| Custom Metadata | JSON | Additional context as JSON |
-
-**Agent Options:**
-
-| Field | Description |
-|-------|-------------|
-| Max Iterations | Maximum tool calling iterations (default: 10) |
-| Return Intermediate Steps | Include tool call details in output |
-
-## Credentials
-
-### Provider Credentials
-
-Each provider requires its own credentials:
-
-- **OpenAI**: API Key
-- **Anthropic**: API Key
-- **Azure OpenAI**: Endpoint, API Key, Deployment Name, API Version
-- **Google Gemini**: API Key
-- **AWS Bedrock**: Access Key, Secret Key, Region
-- **Groq**: API Key
-- **Mistral**: API Key
-- **Ollama**: Base URL (default: http://localhost:11434)
-- **xAI Grok**: API Key
-- **vLLM**: Base URL, optional API Key
-- **OpenAI Compatible**: Base URL, API Key
-
-### Langfuse API (Optional)
-
-- **Base URL**: Langfuse instance URL (e.g., `https://cloud.langfuse.com`)
-- **Public Key**: Langfuse public key
-- **Secret Key**: Langfuse secret key
+> **Note**: Token usage availability depends on the LLM provider. Some providers (like Ollama) may not return token information.
 
 ## Usage Examples
 
-### Basic AI Agent
+### Basic AI Agent with Langfuse
 
-1. Add **AI Agent via LLM Observability**
+1. Add **AI Agent Langfuse** node
 2. Select your **Provider** (e.g., OpenAI)
-3. Configure credentials
+3. Configure credentials (includes Langfuse settings)
 4. Enter the **Model** name (e.g., `gpt-4o`)
 5. Configure the prompt
 
-### AI Agent with Langfuse Tracing
+### AI Agent with Phoenix Tracing
 
-1. Set up as above
-2. Expand **Observability**
-3. Enable **Enable Langfuse**
-4. Configure Langfuse credentials
-5. Optionally add Session ID, User ID, Tags
+1. Add **AI Agent Phoenix** node
+2. Select your **Provider**
+3. Configure credentials (includes Phoenix collector URL)
+4. Enter the **Model** name
+5. Configure the prompt
 
 ### AI Agent with Tools
 
-1. Set up the AI Agent
-2. Add n8n tool nodes (Calculator, HTTP Request, Code, etc.)
+1. Set up the AI Agent (Langfuse or Phoenix)
+2. Add n8n tool nodes (Calculator, HTTP Request, Code, Qdrant Search, etc.)
 3. Connect tools to the **Tool** input
+
+### Using Qdrant Vector Search
+
+1. Add **Qdrant Search Tool (Langfuse)** or **Qdrant Search Tool (Phoenix)**
+2. Configure Qdrant credentials
+3. Connect to the AI Agent's Tool input
 
 ### Using Self-hosted vLLM
 
@@ -195,27 +228,36 @@ Each provider requires its own credentials:
 - **n8n**: Version 1.0.0 or later
 - **Node.js**: Version 20.15 or later
 - **Langfuse**: Cloud and self-hosted instances
+- **Arize Phoenix**: Cloud and self-hosted instances
 
 ## Resources
 
 - [n8n Community Node Docs](https://docs.n8n.io/integrations/community-nodes/)
-- [Langfuse Documentation](https://docs.langfuse.com/)
+- [Langfuse Documentation](https://langfuse.com/docs)
+- [Arize Phoenix Documentation](https://docs.arize.com/phoenix)
 - [vLLM Documentation](https://docs.vllm.ai/)
 - [n8n Community Forum](https://community.n8n.io/)
 - [Ascenzia](https://ascenzia.fr)
 
 ## Version History
 
-- **v0.10.30** - Added Azure OpenAI support for Phoenix nodes
-- **v0.10.29** - Added Arize Phoenix support (beta): AI Agent Phoenix node with OpenTelemetry tracing
+- **v0.10.38** - Fix: accumulate token usage across all LLM calls (when using tools)
+- **v0.10.37** - Add token usage to output and n8n AI logs panel
+- **v0.10.36** - Update Phoenix logos to official Arize branding
+- **v0.10.35** - Add all LLM providers to Phoenix node (Gemini, Bedrock, Groq, Mistral, Ollama, Grok, vLLM, OpenAI Compatible)
+- **v0.10.34** - Show provider name in Phoenix span (agent_openai, agent_anthropic, etc.)
+- **v0.10.33** - Implement OpenInference semantic conventions for Phoenix tracing
+- **v0.10.32** - Fix Azure OpenAI max_tokens error (use max_completion_tokens)
+- **v0.10.30** - Add Azure OpenAI support for Phoenix nodes
+- **v0.10.29** - Add Arize Phoenix support: AI Agent Phoenix node with OpenTelemetry tracing
 - **v0.10.x** - Bug fixes: trace tool calls as separate spans, handle nested JSON from vector stores
 - **v0.9.x** - Enhanced Langfuse tracing and stability improvements
-- **v0.8.0** - Standalone AI Agent with integrated multi-provider LLM support (no separate LLM node needed)
+- **v0.8.0** - Standalone AI Agent with integrated multi-provider LLM support
 - **v0.7.0** - Simplified package: AI Agent with Langfuse + vLLM only
-- **v0.6.0** - AI Agent with integrated observability, custom LLM connection type
+- **v0.6.0** - AI Agent with integrated observability
 - **v0.5.0** - Added Grok (xAI) support
-- **v0.4.0** - Simplified architecture: removed legacy integrated nodes
-- **v0.3.0** - Modular architecture: pure LLM nodes + separate observability layer
+- **v0.4.0** - Simplified architecture
+- **v0.3.0** - Modular architecture
 - **v0.2.x** - Multi-provider support with integrated Langfuse
 - **v0.1.x** - Initial release (OpenAI + Langfuse)
 
