@@ -1,11 +1,13 @@
 {
   "name": "n8n-nodes-llm-observability",
   "version": "0.10.28",
-  "description": "n8n community nodes: Standalone AI Agent with multi-provider LLM support and integrated Langfuse observability",
+  "description": "n8n community nodes: Standalone AI Agent with multi-provider LLM support and integrated Langfuse/Phoenix observability",
   "keywords": [
     "n8n-community-node-package",
     "ai-agent",
     "langfuse",
+    "phoenix",
+    "arize",
     "langchain",
     "openai",
     "anthropic",
@@ -15,7 +17,8 @@
     "ollama",
     "vllm",
     "observability",
-    "tracing"
+    "tracing",
+    "opentelemetry"
   ],
   "license": "MIT",
   "homepage": "https://ascenzia.fr",
@@ -56,14 +59,25 @@
       "dist/credentials/GrokLangfuseApi.credentials.js",
       "dist/credentials/VllmLangfuseApi.credentials.js",
       "dist/credentials/OpenAiCompatibleLangfuseApi.credentials.js",
-      "dist/credentials/QdrantOpenAiLangfuseApi.credentials.js"
+      "dist/credentials/QdrantOpenAiLangfuseApi.credentials.js",
+      "dist/credentials/PhoenixApi.credentials.js",
+      "dist/credentials/OpenAiPhoenixApi.credentials.js",
+      "dist/credentials/AnthropicPhoenixApi.credentials.js",
+      "dist/credentials/QdrantPhoenixApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/AiAgentLlmObs/AiAgentLlmObs.node.js",
-      "dist/nodes/ToolQdrantSearchLangfuse/ToolQdrantSearchLangfuse.node.js"
+      "dist/nodes/ToolQdrantSearchLangfuse/ToolQdrantSearchLangfuse.node.js",
+      "dist/nodes/AiAgentPhoenix/AiAgentPhoenix.node.js",
+      "dist/nodes/ToolQdrantSearchPhoenix/ToolQdrantSearchPhoenix.node.js"
     ]
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.57.0",
+    "@opentelemetry/resources": "^1.30.0",
+    "@opentelemetry/sdk-trace-base": "^1.30.0",
+    "@opentelemetry/sdk-trace-node": "^1.30.0",
     "@qdrant/js-client-rest": "^1.12.0",
     "@langchain/anthropic": "^0.3.20",
     "@langchain/aws": "^0.1.12",
