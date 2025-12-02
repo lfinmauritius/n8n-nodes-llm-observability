@@ -924,6 +924,52 @@ export class AiAgentLlmObs implements INodeType {
 					}
 				}
 
+				// Extract token usage from response
+				let tokenUsage: {
+					promptTokens?: number;
+					completionTokens?: number;
+					totalTokens?: number;
+				} | undefined;
+
+				// Try usage_metadata first (standard LangChain format)
+				if (response.usage_metadata) {
+					tokenUsage = {
+						promptTokens: response.usage_metadata.input_tokens,
+						completionTokens: response.usage_metadata.output_tokens,
+						totalTokens: response.usage_metadata.total_tokens,
+					};
+				}
+				// Fallback to response_metadata.usage (some providers)
+				else if (response.response_metadata?.usage) {
+					const usage = response.response_metadata.usage;
+					tokenUsage = {
+						promptTokens: usage.prompt_tokens || usage.input_tokens,
+						completionTokens: usage.completion_tokens || usage.output_tokens,
+						totalTokens: usage.total_tokens,
+					};
+				}
+				// Fallback to response_metadata.tokenUsage (OpenAI format)
+				else if (response.response_metadata?.tokenUsage) {
+					const usage = response.response_metadata.tokenUsage;
+					tokenUsage = {
+						promptTokens: usage.promptTokens,
+						completionTokens: usage.completionTokens,
+						totalTokens: usage.totalTokens,
+					};
+				}
+
+				// Log AI event for n8n UI logs panel
+				if (tokenUsage) {
+					const tokenMessage = JSON.stringify({
+						model: modelName,
+						provider: provider,
+						promptTokens: tokenUsage.promptTokens,
+						completionTokens: tokenUsage.completionTokens,
+						totalTokens: tokenUsage.totalTokens,
+					});
+					this.logAiEvent('ai-llm-generated-output', tokenMessage);
+				}
+
 				if (memory) {
 					try {
 						await memory.saveContext(
@@ -942,6 +988,11 @@ export class AiAgentLlmObs implements INodeType {
 				// Always include intermediate steps for debugging tool results
 				if (intermediateSteps.length > 0) {
 					outputJson.intermediateSteps = intermediateSteps;
+				}
+
+				// Include token usage in output for workflow access
+				if (tokenUsage) {
+					outputJson.tokenUsage = tokenUsage;
 				}
 
 				// Flush Langfuse to ensure traces are sent
