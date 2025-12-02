@@ -349,7 +349,7 @@ export class AiAgentPhoenix implements INodeType {
 							azureOpenAIApiVersion: credentials.apiVersion as string,
 							azureOpenAIBasePath: `${credentials.endpoint}/openai/deployments`,
 							temperature: modelOptions.temperature ?? 0.7,
-							maxTokens: modelOptions.maxTokens ?? 4096,
+							maxCompletionTokens: modelOptions.maxTokens ?? 4096,
 						});
 						break;
 					}
