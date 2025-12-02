@@ -225,7 +225,7 @@ The node outputs:
 
 ## Compatibility
 
-- **n8n**: Version 1.0.0 or later
+- **n8n**: Version 1.17.0 or later (tested on 1.17+)
 - **Node.js**: Version 20.15 or later
 - **Langfuse**: Cloud and self-hosted instances
 - **Arize Phoenix**: Cloud and self-hosted instances
