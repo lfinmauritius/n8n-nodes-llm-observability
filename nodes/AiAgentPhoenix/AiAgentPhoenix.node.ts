@@ -11,11 +11,42 @@ import type { Tool } from '@langchain/core/tools';
 import type { BaseOutputParser } from '@langchain/core/output_parsers';
 import type { BaseMessage } from '@langchain/core/messages';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { trace, SpanStatusCode } from '@opentelemetry/api';
+import { trace, SpanStatusCode, SpanKind } from '@opentelemetry/api';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { Resource } from '@opentelemetry/resources';
+
+// OpenInference Semantic Conventions for Phoenix
+// See: https://arize-ai.github.io/openinference/spec/semantic_conventions.html
+const OPENINFERENCE = {
+	SPAN_KIND: 'openinference.span.kind',
+	INPUT_VALUE: 'input.value',
+	INPUT_MIME_TYPE: 'input.mime_type',
+	OUTPUT_VALUE: 'output.value',
+	OUTPUT_MIME_TYPE: 'output.mime_type',
+	LLM_MODEL_NAME: 'llm.model_name',
+	LLM_INVOCATION_PARAMETERS: 'llm.invocation_parameters',
+	LLM_INPUT_MESSAGES: 'llm.input_messages',
+	LLM_OUTPUT_MESSAGES: 'llm.output_messages',
+	LLM_TOKEN_COUNT_PROMPT: 'llm.token_count.prompt',
+	LLM_TOKEN_COUNT_COMPLETION: 'llm.token_count.completion',
+	LLM_TOKEN_COUNT_TOTAL: 'llm.token_count.total',
+	TOOL_NAME: 'tool.name',
+	TOOL_DESCRIPTION: 'tool.description',
+	TOOL_PARAMETERS: 'tool.parameters',
+	SESSION_ID: 'session.id',
+	USER_ID: 'user.id',
+	METADATA: 'metadata',
+	TAG_TAGS: 'tag.tags',
+};
+
+const SPAN_KIND = {
+	LLM: 'LLM',
+	CHAIN: 'CHAIN',
+	TOOL: 'TOOL',
+	AGENT: 'AGENT',
+};
 
 const LLM_PROVIDERS = [
 	{ name: 'OpenAI', value: 'openai' },
@@ -447,16 +478,24 @@ export class AiAgentPhoenix implements INodeType {
 				if (systemMessage) messages.push(new SystemMessage(systemMessage));
 				messages.push(new HumanMessage(userMessage));
 
-				// Execute with Phoenix tracing
+				// Execute with Phoenix tracing using OpenInference semantic conventions
 				let response: any;
 				const intermediateSteps: any[] = [];
 
-				await tracer.startActiveSpan('llm_call', async (span) => {
-					span.setAttribute('llm.provider', provider);
-					span.setAttribute('llm.model', modelName);
-					span.setAttribute('llm.temperature', modelOptions.temperature ?? 0.7);
-					if (phoenixOptions.sessionId) span.setAttribute('session.id', phoenixOptions.sessionId);
-					if (phoenixOptions.userId) span.setAttribute('user.id', phoenixOptions.userId);
+				await tracer.startActiveSpan('agent', { kind: SpanKind.INTERNAL }, async (agentSpan) => {
+					// Set OpenInference attributes for AGENT span
+					agentSpan.setAttribute(OPENINFERENCE.SPAN_KIND, SPAN_KIND.AGENT);
+					agentSpan.setAttribute(OPENINFERENCE.INPUT_VALUE, userMessage);
+					agentSpan.setAttribute(OPENINFERENCE.INPUT_MIME_TYPE, 'text/plain');
+					agentSpan.setAttribute(OPENINFERENCE.LLM_MODEL_NAME, modelName);
+					agentSpan.setAttribute(OPENINFERENCE.LLM_INVOCATION_PARAMETERS, JSON.stringify({
+						temperature: modelOptions.temperature ?? 0.7,
+						max_tokens: modelOptions.maxTokens ?? 4096,
+						provider: provider,
+					}));
+					if (phoenixOptions.sessionId) agentSpan.setAttribute(OPENINFERENCE.SESSION_ID, phoenixOptions.sessionId);
+					if (phoenixOptions.userId) agentSpan.setAttribute(OPENINFERENCE.USER_ID, phoenixOptions.userId);
+					if (phoenixOptions.tags) agentSpan.setAttribute(OPENINFERENCE.TAG_TAGS, JSON.stringify(phoenixOptions.tags.split(',').map(t => t.trim())));
 
 					try {
 						if (tools && tools.length > 0) {
@@ -469,17 +508,57 @@ export class AiAgentPhoenix implements INodeType {
 							while (iterations < maxIterations) {
 								iterations++;
 
-								await tracer.startActiveSpan(`iteration_${iterations}`, async (iterSpan) => {
+								// LLM span for each iteration
+								await tracer.startActiveSpan(`llm_call_${iterations}`, { kind: SpanKind.INTERNAL }, async (llmSpan) => {
+									llmSpan.setAttribute(OPENINFERENCE.SPAN_KIND, SPAN_KIND.LLM);
+									llmSpan.setAttribute(OPENINFERENCE.LLM_MODEL_NAME, modelName);
+									llmSpan.setAttribute(OPENINFERENCE.INPUT_VALUE, JSON.stringify(currentMessages.map(m => ({
+										role: m._getType(),
+										content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+									}))));
+									llmSpan.setAttribute(OPENINFERENCE.INPUT_MIME_TYPE, 'application/json');
+
+									// Set flattened input messages
+									currentMessages.forEach((m, i) => {
+										llmSpan.setAttribute(`llm.input_messages.${i}.message.role`, m._getType());
+										llmSpan.setAttribute(`llm.input_messages.${i}.message.content`, typeof m.content === 'string' ? m.content : JSON.stringify(m.content));
+									});
+
 									const aiResponse = await modelWithTools.invoke(currentMessages);
 									currentMessages.push(aiResponse);
+
+									// Set output message
+									const outputContent = typeof aiResponse.content === 'string' ? aiResponse.content : JSON.stringify(aiResponse.content);
+									llmSpan.setAttribute(OPENINFERENCE.OUTPUT_VALUE, outputContent);
+									llmSpan.setAttribute(OPENINFERENCE.OUTPUT_MIME_TYPE, 'text/plain');
+									llmSpan.setAttribute('llm.output_messages.0.message.role', 'assistant');
+									llmSpan.setAttribute('llm.output_messages.0.message.content', outputContent);
+
+									// Extract token usage if available
+									const usage = (aiResponse as any).usage_metadata || (aiResponse as any).response_metadata?.usage;
+									if (usage) {
+										if (usage.input_tokens || usage.prompt_tokens) {
+											llmSpan.setAttribute(OPENINFERENCE.LLM_TOKEN_COUNT_PROMPT, usage.input_tokens || usage.prompt_tokens);
+										}
+										if (usage.output_tokens || usage.completion_tokens) {
+											llmSpan.setAttribute(OPENINFERENCE.LLM_TOKEN_COUNT_COMPLETION, usage.output_tokens || usage.completion_tokens);
+										}
+										if (usage.total_tokens) {
+											llmSpan.setAttribute(OPENINFERENCE.LLM_TOKEN_COUNT_TOTAL, usage.total_tokens);
+										}
+									}
 
 									const toolCalls = aiResponse.tool_calls || (aiResponse as any).additional_kwargs?.tool_calls;
 
 									if (!toolCalls || toolCalls.length === 0) {
 										response = aiResponse;
-										iterSpan.end();
+										llmSpan.setStatus({ code: SpanStatusCode.OK });
+										llmSpan.end();
 										return;
 									}
+
+									llmSpan.setStatus({ code: SpanStatusCode.OK });
+									llmSpan.end();
 
 									const { ToolMessage } = await import('@langchain/core/messages');
 
@@ -489,9 +568,16 @@ export class AiAgentPhoenix implements INodeType {
 										const toolArgs = toolCall.args || (toolCall.function?.arguments ? JSON.parse(toolCall.function.arguments) : {});
 										const tool = tools.find((t) => t.name === toolName);
 
-										await tracer.startActiveSpan(`tool_${toolName}`, async (toolSpan) => {
-											toolSpan.setAttribute('tool.name', toolName);
-											toolSpan.setAttribute('tool.input', JSON.stringify(toolArgs));
+										// TOOL span
+										await tracer.startActiveSpan(`tool_${toolName}`, { kind: SpanKind.INTERNAL }, async (toolSpan) => {
+											toolSpan.setAttribute(OPENINFERENCE.SPAN_KIND, SPAN_KIND.TOOL);
+											toolSpan.setAttribute(OPENINFERENCE.TOOL_NAME, toolName);
+											toolSpan.setAttribute(OPENINFERENCE.TOOL_PARAMETERS, JSON.stringify(toolArgs));
+											toolSpan.setAttribute(OPENINFERENCE.INPUT_VALUE, JSON.stringify(toolArgs));
+											toolSpan.setAttribute(OPENINFERENCE.INPUT_MIME_TYPE, 'application/json');
+											if (tool?.description) {
+												toolSpan.setAttribute(OPENINFERENCE.TOOL_DESCRIPTION, tool.description);
+											}
 
 											if (tool) {
 												try {
@@ -508,7 +594,9 @@ export class AiAgentPhoenix implements INodeType {
 														tool_call_id: toolCallId,
 													}));
 
-													toolSpan.setAttribute('tool.output', formattedResult.substring(0, 1000));
+													toolSpan.setAttribute(OPENINFERENCE.OUTPUT_VALUE, formattedResult.substring(0, 10000));
+													toolSpan.setAttribute(OPENINFERENCE.OUTPUT_MIME_TYPE, 'application/json');
+													toolSpan.setStatus({ code: SpanStatusCode.OK });
 												} catch (error: any) {
 													const errorMessage = `Error: ${error.message}`;
 													intermediateSteps.push({
@@ -519,13 +607,13 @@ export class AiAgentPhoenix implements INodeType {
 														content: errorMessage,
 														tool_call_id: toolCallId,
 													}));
+													toolSpan.setAttribute(OPENINFERENCE.OUTPUT_VALUE, errorMessage);
 													toolSpan.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
 												}
 											}
 											toolSpan.end();
 										});
 									}
-									iterSpan.end();
 								});
 
 								if (response) break;
@@ -533,15 +621,59 @@ export class AiAgentPhoenix implements INodeType {
 
 							if (!response) response = currentMessages[currentMessages.length - 1];
 						} else {
-							response = await model.invoke(messages);
+							// Simple LLM call without tools
+							await tracer.startActiveSpan('llm_call', { kind: SpanKind.INTERNAL }, async (llmSpan) => {
+								llmSpan.setAttribute(OPENINFERENCE.SPAN_KIND, SPAN_KIND.LLM);
+								llmSpan.setAttribute(OPENINFERENCE.LLM_MODEL_NAME, modelName);
+								llmSpan.setAttribute(OPENINFERENCE.INPUT_VALUE, JSON.stringify(messages.map(m => ({
+									role: m._getType(),
+									content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+								}))));
+								llmSpan.setAttribute(OPENINFERENCE.INPUT_MIME_TYPE, 'application/json');
+
+								// Set flattened input messages
+								messages.forEach((m, i) => {
+									llmSpan.setAttribute(`llm.input_messages.${i}.message.role`, m._getType());
+									llmSpan.setAttribute(`llm.input_messages.${i}.message.content`, typeof m.content === 'string' ? m.content : JSON.stringify(m.content));
+								});
+
+								response = await model.invoke(messages);
+
+								const outputContent = typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
+								llmSpan.setAttribute(OPENINFERENCE.OUTPUT_VALUE, outputContent);
+								llmSpan.setAttribute(OPENINFERENCE.OUTPUT_MIME_TYPE, 'text/plain');
+								llmSpan.setAttribute('llm.output_messages.0.message.role', 'assistant');
+								llmSpan.setAttribute('llm.output_messages.0.message.content', outputContent);
+
+								// Extract token usage if available
+								const usage = (response as any).usage_metadata || (response as any).response_metadata?.usage;
+								if (usage) {
+									if (usage.input_tokens || usage.prompt_tokens) {
+										llmSpan.setAttribute(OPENINFERENCE.LLM_TOKEN_COUNT_PROMPT, usage.input_tokens || usage.prompt_tokens);
+									}
+									if (usage.output_tokens || usage.completion_tokens) {
+										llmSpan.setAttribute(OPENINFERENCE.LLM_TOKEN_COUNT_COMPLETION, usage.output_tokens || usage.completion_tokens);
+									}
+									if (usage.total_tokens) {
+										llmSpan.setAttribute(OPENINFERENCE.LLM_TOKEN_COUNT_TOTAL, usage.total_tokens);
+									}
+								}
+
+								llmSpan.setStatus({ code: SpanStatusCode.OK });
+								llmSpan.end();
+							});
 						}
 
-						span.setStatus({ code: SpanStatusCode.OK });
+						// Set agent output
+						const finalOutput = typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
+						agentSpan.setAttribute(OPENINFERENCE.OUTPUT_VALUE, finalOutput);
+						agentSpan.setAttribute(OPENINFERENCE.OUTPUT_MIME_TYPE, 'text/plain');
+						agentSpan.setStatus({ code: SpanStatusCode.OK });
 					} catch (error: any) {
-						span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+						agentSpan.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
 						throw error;
 					} finally {
-						span.end();
+						agentSpan.end();
 					}
 				});
 
