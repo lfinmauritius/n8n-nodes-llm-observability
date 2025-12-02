@@ -3,8 +3,9 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 	SupplyData,
+	IDataObject,
 } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeOperationError, jsonParse } from 'n8n-workflow';
 import { DynamicTool } from '@langchain/core/tools';
 import type { Embeddings } from '@langchain/core/embeddings';
 import { Langfuse } from 'langfuse';
@@ -86,11 +87,25 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 				placeholder: 'Add Option',
 				options: [
 					{
-						displayName: 'Top K',
-						name: 'topK',
-						type: 'number',
-						default: 4,
-						description: 'Number of results to return',
+						displayName: 'Content Payload Key',
+						name: 'contentPayloadKey',
+						type: 'string',
+						default: 'content',
+						description: 'The key to use for the content payload in Qdrant',
+					},
+					{
+						displayName: 'Include Metadata in Results',
+						name: 'includeMetadata',
+						type: 'boolean',
+						default: true,
+						description: 'Whether to include document metadata in the results',
+					},
+					{
+						displayName: 'Metadata Payload Key',
+						name: 'metadataPayloadKey',
+						type: 'string',
+						default: 'metadata',
+						description: 'The key to use for the metadata payload in Qdrant',
 					},
 					{
 						displayName: 'Score Threshold',
@@ -101,11 +116,21 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 						description: 'Minimum similarity score (0-1) for results',
 					},
 					{
-						displayName: 'Content Field',
-						name: 'contentField',
-						type: 'string',
-						default: 'content',
-						description: 'Name of the payload field containing the document content',
+						displayName: 'Search Filter (JSON)',
+						name: 'searchFilterJson',
+						type: 'json',
+						typeOptions: {
+							rows: 5,
+						},
+						default: '',
+						description: 'Filter using <a href="https://qdrant.tech/documentation/concepts/filtering/" target="_blank">Qdrant filtering syntax</a>',
+					},
+					{
+						displayName: 'Top K',
+						name: 'topK',
+						type: 'number',
+						default: 4,
+						description: 'Number of results to return',
 					},
 				],
 			},
@@ -164,7 +189,10 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 		const options = this.getNodeParameter('options', itemIndex, {}) as {
 			topK?: number;
 			scoreThreshold?: number;
-			contentField?: string;
+			contentPayloadKey?: string;
+			metadataPayloadKey?: string;
+			searchFilterJson?: string;
+			includeMetadata?: boolean;
 		};
 		const langfuseOptions = this.getNodeParameter('langfuseOptions', itemIndex, {}) as {
 			sessionId?: string;
@@ -174,7 +202,19 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 
 		const topK = options.topK ?? 4;
 		const scoreThreshold = options.scoreThreshold ?? 0;
-		const contentField = options.contentField ?? 'content';
+		const contentPayloadKey = options.contentPayloadKey ?? 'content';
+		const metadataPayloadKey = options.metadataPayloadKey ?? 'metadata';
+		const includeMetadata = options.includeMetadata ?? true;
+
+		// Parse search filter if provided
+		let searchFilter: IDataObject | undefined;
+		if (options.searchFilterJson && options.searchFilterJson.trim()) {
+			try {
+				searchFilter = jsonParse<IDataObject>(options.searchFilterJson);
+			} catch {
+				throw new NodeOperationError(this.getNode(), 'Invalid JSON in Search Filter');
+			}
+		}
 
 		// Initialize Qdrant client
 		const qdrantClient = new QdrantClient({
@@ -207,6 +247,7 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 					metadata: {
 						collection: collectionName,
 						topK,
+						hasFilter: !!searchFilter,
 					},
 				});
 
@@ -214,9 +255,7 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 					// Create a span for embedding generation
 					const embeddingSpan = trace.span({
 						name: 'embedding',
-						metadata: {
-							query,
-						},
+						input: { query },
 					});
 
 					const startTime = Date.now();
@@ -233,10 +272,11 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 					// Create a span for Qdrant search
 					const searchSpan = trace.span({
 						name: 'qdrant_search',
-						metadata: {
+						input: {
 							collection: collectionName,
 							topK,
 							scoreThreshold,
+							filter: searchFilter,
 						},
 					});
 
@@ -246,6 +286,7 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 						limit: topK,
 						score_threshold: scoreThreshold > 0 ? scoreThreshold : undefined,
 						with_payload: true,
+						filter: searchFilter as any,
 					});
 					const searchDuration = Date.now() - searchStartTime;
 
@@ -265,9 +306,18 @@ export class ToolQdrantSearchLangfuse implements INodeType {
 					// Format results
 					const formattedResults = searchResults.map((result, index) => {
 						const payload = result.payload as Record<string, any>;
-						const content = payload[contentField] || JSON.stringify(payload);
+						const content = payload[contentPayloadKey] || JSON.stringify(payload);
 						const score = result.score.toFixed(4);
-						return `[${index + 1}] (Score: ${score})\n${content}`;
+
+						let resultText = `[${index + 1}] (Score: ${score})\n${content}`;
+
+						// Include metadata if requested
+						if (includeMetadata && payload[metadataPayloadKey]) {
+							const metadata = payload[metadataPayloadKey];
+							resultText += `\nMetadata: ${JSON.stringify(metadata)}`;
+						}
+
+						return resultText;
 					});
 
 					const output = formattedResults.join('\n\n---\n\n');

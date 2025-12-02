@@ -32,7 +32,8 @@
       "Bash(git mv:*)",
       "WebFetch(domain:community.n8n.io)",
       "WebFetch(domain:medium.com)",
-      "WebFetch(domain:langfuse.com)"
+      "WebFetch(domain:langfuse.com)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
