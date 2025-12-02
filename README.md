@@ -31,6 +31,26 @@ The native n8n AI Agent requires connecting separate LLM nodes and doesn't have 
          └── Langfuse (optional)
 ```
 
+## Arize Phoenix Support (Beta)
+
+This package also includes **AI Agent Phoenix** node for [Arize Phoenix](https://arize.com/phoenix/) observability integration.
+
+> **Note:** The Phoenix integration is currently in **beta**. It supports OpenAI, Azure OpenAI, Anthropic, Ollama, and OpenAI-compatible providers with OpenTelemetry-based tracing.
+
+### Phoenix Nodes
+
+| Node | Description |
+|------|-------------|
+| AI Agent Phoenix | AI Agent with integrated Phoenix tracing |
+| Qdrant Search Tool (Phoenix) | Vector search tool with Phoenix observability |
+
+### Phoenix Credentials
+
+- **OpenAI + Phoenix API**
+- **Azure OpenAI + Phoenix API**
+- **Anthropic + Phoenix API**
+- **Qdrant + Phoenix API**
+
 ## Installation
 
 ### Community Nodes (Recommended)
@@ -186,6 +206,8 @@ Each provider requires its own credentials:
 
 ## Version History
 
+- **v0.10.30** - Added Azure OpenAI support for Phoenix nodes
+- **v0.10.29** - Added Arize Phoenix support (beta): AI Agent Phoenix node with OpenTelemetry tracing
 - **v0.10.x** - Bug fixes: trace tool calls as separate spans, handle nested JSON from vector stores
 - **v0.9.x** - Enhanced Langfuse tracing and stability improvements
 - **v0.8.0** - Standalone AI Agent with integrated multi-provider LLM support (no separate LLM node needed)
