@@ -639,6 +639,40 @@ export class AiAgentPhoenix implements INodeType {
 				let response: any;
 				const intermediateSteps: any[] = [];
 
+				// Accumulate token usage across all LLM calls
+				const totalTokenUsage = {
+					promptTokens: 0,
+					completionTokens: 0,
+					totalTokens: 0,
+				};
+
+				// Helper to extract and accumulate token usage from a response
+				const accumulateTokenUsage = (aiResponse: any) => {
+					let usage: any;
+					if (aiResponse.usage_metadata) {
+						usage = {
+							promptTokens: aiResponse.usage_metadata.input_tokens,
+							completionTokens: aiResponse.usage_metadata.output_tokens,
+							totalTokens: aiResponse.usage_metadata.total_tokens,
+						};
+					} else if (aiResponse.response_metadata?.usage) {
+						const u = aiResponse.response_metadata.usage;
+						usage = {
+							promptTokens: u.prompt_tokens || u.input_tokens,
+							completionTokens: u.completion_tokens || u.output_tokens,
+							totalTokens: u.total_tokens,
+						};
+					} else if (aiResponse.response_metadata?.tokenUsage) {
+						usage = aiResponse.response_metadata.tokenUsage;
+					}
+
+					if (usage) {
+						totalTokenUsage.promptTokens += usage.promptTokens || 0;
+						totalTokenUsage.completionTokens += usage.completionTokens || 0;
+						totalTokenUsage.totalTokens += usage.totalTokens || 0;
+					}
+				};
+
 				await tracer.startActiveSpan(`agent_${provider}`, { kind: SpanKind.INTERNAL }, async (agentSpan) => {
 					// Set OpenInference attributes for AGENT span
 					agentSpan.setAttribute(OPENINFERENCE.SPAN_KIND, SPAN_KIND.AGENT);
@@ -683,6 +717,9 @@ export class AiAgentPhoenix implements INodeType {
 
 									const aiResponse = await modelWithTools.invoke(currentMessages);
 									currentMessages.push(aiResponse);
+
+									// Accumulate tokens from this LLM call
+									accumulateTokenUsage(aiResponse);
 
 									// Set output message
 									const outputContent = typeof aiResponse.content === 'string' ? aiResponse.content : JSON.stringify(aiResponse.content);
@@ -796,6 +833,9 @@ export class AiAgentPhoenix implements INodeType {
 
 								response = await model.invoke(messages);
 
+								// Accumulate tokens from single LLM call
+								accumulateTokenUsage(response);
+
 								const outputContent = typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
 								llmSpan.setAttribute(OPENINFERENCE.OUTPUT_VALUE, outputContent);
 								llmSpan.setAttribute(OPENINFERENCE.OUTPUT_MIME_TYPE, 'text/plain');
@@ -844,39 +884,8 @@ export class AiAgentPhoenix implements INodeType {
 					}
 				}
 
-				// Extract token usage from response
-				let tokenUsage: {
-					promptTokens?: number;
-					completionTokens?: number;
-					totalTokens?: number;
-				} | undefined;
-
-				// Try usage_metadata first (standard LangChain format)
-				if (response.usage_metadata) {
-					tokenUsage = {
-						promptTokens: response.usage_metadata.input_tokens,
-						completionTokens: response.usage_metadata.output_tokens,
-						totalTokens: response.usage_metadata.total_tokens,
-					};
-				}
-				// Fallback to response_metadata.usage (some providers)
-				else if (response.response_metadata?.usage) {
-					const usage = response.response_metadata.usage;
-					tokenUsage = {
-						promptTokens: usage.prompt_tokens || usage.input_tokens,
-						completionTokens: usage.completion_tokens || usage.output_tokens,
-						totalTokens: usage.total_tokens,
-					};
-				}
-				// Fallback to response_metadata.tokenUsage (OpenAI format)
-				else if (response.response_metadata?.tokenUsage) {
-					const usage = response.response_metadata.tokenUsage;
-					tokenUsage = {
-						promptTokens: usage.promptTokens,
-						completionTokens: usage.completionTokens,
-						totalTokens: usage.totalTokens,
-					};
-				}
+				// Use accumulated token usage (includes all LLM calls when using tools)
+				const tokenUsage = totalTokenUsage.totalTokens > 0 ? totalTokenUsage : undefined;
 
 				// Log AI event for n8n UI logs panel
 				if (tokenUsage) {

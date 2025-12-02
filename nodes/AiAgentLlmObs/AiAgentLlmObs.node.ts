@@ -779,6 +779,40 @@ export class AiAgentLlmObs implements INodeType {
 				// Debug info for tool binding
 				let toolBindingDebug: any = {};
 
+				// Accumulate token usage across all LLM calls
+				const totalTokenUsage = {
+					promptTokens: 0,
+					completionTokens: 0,
+					totalTokens: 0,
+				};
+
+				// Helper to extract and accumulate token usage from a response
+				const accumulateTokenUsage = (aiResponse: any) => {
+					let usage: any;
+					if (aiResponse.usage_metadata) {
+						usage = {
+							promptTokens: aiResponse.usage_metadata.input_tokens,
+							completionTokens: aiResponse.usage_metadata.output_tokens,
+							totalTokens: aiResponse.usage_metadata.total_tokens,
+						};
+					} else if (aiResponse.response_metadata?.usage) {
+						const u = aiResponse.response_metadata.usage;
+						usage = {
+							promptTokens: u.prompt_tokens || u.input_tokens,
+							completionTokens: u.completion_tokens || u.output_tokens,
+							totalTokens: u.total_tokens,
+						};
+					} else if (aiResponse.response_metadata?.tokenUsage) {
+						usage = aiResponse.response_metadata.tokenUsage;
+					}
+
+					if (usage) {
+						totalTokenUsage.promptTokens += usage.promptTokens || 0;
+						totalTokenUsage.completionTokens += usage.completionTokens || 0;
+						totalTokenUsage.totalTokens += usage.totalTokens || 0;
+					}
+				};
+
 				// Invoke options with Langfuse callbacks
 				const invokeOptions = { callbacks: langfuseCallbacks, runName: llmClassName };
 
@@ -797,6 +831,9 @@ export class AiAgentLlmObs implements INodeType {
 						iterations++;
 						const aiResponse = await modelWithTools.invoke(currentMessages, invokeOptions);
 						currentMessages.push(aiResponse);
+
+						// Accumulate tokens from this LLM call
+						accumulateTokenUsage(aiResponse);
 
 						const toolCalls = aiResponse.tool_calls || (aiResponse as any).additional_kwargs?.tool_calls;
 
@@ -912,6 +949,8 @@ export class AiAgentLlmObs implements INodeType {
 					}
 				} else {
 					response = await model.invoke(messages, invokeOptions);
+					// Accumulate tokens from single LLM call
+					accumulateTokenUsage(response);
 				}
 
 				let outputContent = response.content || response.text || response;
@@ -924,39 +963,8 @@ export class AiAgentLlmObs implements INodeType {
 					}
 				}
 
-				// Extract token usage from response
-				let tokenUsage: {
-					promptTokens?: number;
-					completionTokens?: number;
-					totalTokens?: number;
-				} | undefined;
-
-				// Try usage_metadata first (standard LangChain format)
-				if (response.usage_metadata) {
-					tokenUsage = {
-						promptTokens: response.usage_metadata.input_tokens,
-						completionTokens: response.usage_metadata.output_tokens,
-						totalTokens: response.usage_metadata.total_tokens,
-					};
-				}
-				// Fallback to response_metadata.usage (some providers)
-				else if (response.response_metadata?.usage) {
-					const usage = response.response_metadata.usage;
-					tokenUsage = {
-						promptTokens: usage.prompt_tokens || usage.input_tokens,
-						completionTokens: usage.completion_tokens || usage.output_tokens,
-						totalTokens: usage.total_tokens,
-					};
-				}
-				// Fallback to response_metadata.tokenUsage (OpenAI format)
-				else if (response.response_metadata?.tokenUsage) {
-					const usage = response.response_metadata.tokenUsage;
-					tokenUsage = {
-						promptTokens: usage.promptTokens,
-						completionTokens: usage.completionTokens,
-						totalTokens: usage.totalTokens,
-					};
-				}
+				// Use accumulated token usage (includes all LLM calls when using tools)
+				const tokenUsage = totalTokenUsage.totalTokens > 0 ? totalTokenUsage : undefined;
 
 				// Log AI event for n8n UI logs panel
 				if (tokenUsage) {
