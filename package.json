@@ -55,13 +55,16 @@
       "dist/credentials/OllamaLangfuseApi.credentials.js",
       "dist/credentials/GrokLangfuseApi.credentials.js",
       "dist/credentials/VllmLangfuseApi.credentials.js",
-      "dist/credentials/OpenAiCompatibleLangfuseApi.credentials.js"
+      "dist/credentials/OpenAiCompatibleLangfuseApi.credentials.js",
+      "dist/credentials/QdrantOpenAiLangfuseApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/AiAgentLlmObs/AiAgentLlmObs.node.js"
+      "dist/nodes/AiAgentLlmObs/AiAgentLlmObs.node.js",
+      "dist/nodes/ToolQdrantSearchLangfuse/ToolQdrantSearchLangfuse.node.js"
     ]
   },
   "dependencies": {
+    "@qdrant/js-client-rest": "^1.12.0",
     "@langchain/anthropic": "^0.3.20",
     "@langchain/aws": "^0.1.12",
     "@langchain/core": "^0.3.72",
@@ -70,7 +73,9 @@
     "@langchain/mistralai": "^0.2.3",
     "@langchain/ollama": "^0.2.4",
     "@langchain/openai": "^0.6.9",
-    "langfuse-langchain": "^3.0.0"
+    "langfuse": "^3.0.0",
+    "langfuse-langchain": "^3.0.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/json-schema": "^7.0.15",
