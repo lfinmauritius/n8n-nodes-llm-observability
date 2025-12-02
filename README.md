@@ -26,10 +26,10 @@ The native n8n AI Agent requires connecting separate LLM nodes and doesn't have 
 |------|-------------|
 | **AI Agent Langfuse** | AI Agent with integrated Langfuse tracing |
 | **AI Agent Phoenix** | AI Agent with integrated Arize Phoenix tracing (OpenTelemetry) |
-| **AI Agent Helicone** | AI Agent with integrated Helicone observability (proxy-based) |
+| **AI Agent Helicone** (Beta) | AI Agent with integrated Helicone observability (proxy-based) |
 | **Qdrant Search Tool (Langfuse)** | Vector search tool with Langfuse observability |
 | **Qdrant Search Tool (Phoenix)** | Vector search tool with Phoenix observability |
-| **Qdrant Search Tool (Helicone)** | Vector search tool with Helicone observability |
+| **Qdrant Search Tool (Helicone)** (Beta) | Vector search tool with Helicone observability |
 
 ## Architecture
 
@@ -115,7 +115,9 @@ Each provider has a combined credential that includes both the LLM provider sett
 - **OpenAI Compatible + Phoenix API**
 - **Qdrant + Phoenix API** (for Qdrant Search Tool)
 
-### Helicone Credentials
+### Helicone Credentials (Beta)
+
+> **Beta**: Helicone integration is currently in beta testing.
 
 Each provider has a combined credential that includes both the LLM provider settings and Helicone configuration:
 
@@ -163,9 +165,11 @@ Each provider has a combined credential that includes both the LLM provider sett
 
 | Field | Type | Description |
 |-------|------|-------------|
-| Session ID | string | Group related traces together |
-| User ID | string | Identify the end user |
+| Session ID | string | Group related traces together (uses OpenTelemetry `session.id` attribute) |
+| User ID | string | Identify the end user (uses `user.id` attribute) |
 | Tags | string | Comma-separated tags for filtering |
+
+> **Note**: Phoenix sessions are tracked via the OpenInference semantic convention `session.id`. This allows you to group related traces and view conversation flows in the Phoenix UI.
 
 ### Helicone Options
 
