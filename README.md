@@ -29,6 +29,7 @@ The native n8n AI Agent requires connecting separate LLM nodes and doesn't have 
 | **AI Agent Helicone** | AI Agent with integrated Helicone observability (proxy-based) |
 | **Qdrant Search Tool (Langfuse)** | Vector search tool with Langfuse observability |
 | **Qdrant Search Tool (Phoenix)** | Vector search tool with Phoenix observability |
+| **Qdrant Search Tool (Helicone)** | Vector search tool with Helicone observability |
 
 ## Architecture
 
@@ -125,6 +126,7 @@ Each provider has a combined credential that includes both the LLM provider sett
 - **Groq + Helicone API**
 - **Mistral + Helicone API**
 - **OpenAI Compatible + Helicone API**
+- **Qdrant + Helicone API** (for Qdrant Search Tool)
 
 > **Note**: Helicone works as a proxy - requests are routed through Helicone's servers for observability without requiring SDK changes.
 
@@ -245,7 +247,7 @@ The node outputs:
 
 ### Using Qdrant Vector Search
 
-1. Add **Qdrant Search Tool (Langfuse)** or **Qdrant Search Tool (Phoenix)**
+1. Add **Qdrant Search Tool (Langfuse)**, **Qdrant Search Tool (Phoenix)**, or **Qdrant Search Tool (Helicone)**
 2. Configure Qdrant credentials
 3. Connect to the AI Agent's Tool input
 
@@ -275,6 +277,7 @@ The node outputs:
 
 ## Version History
 
+- **v0.10.40** - Add Qdrant Search Tool for Helicone
 - **v0.10.39** - Add Helicone observability support (AI Agent Helicone node)
 - **v0.10.38** - Fix: accumulate token usage across all LLM calls (when using tools)
 - **v0.10.37** - Add token usage to output and n8n AI logs panel

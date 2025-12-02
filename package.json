@@ -80,14 +80,16 @@
       "dist/credentials/GeminiHeliconeApi.credentials.js",
       "dist/credentials/GroqHeliconeApi.credentials.js",
       "dist/credentials/MistralHeliconeApi.credentials.js",
-      "dist/credentials/OpenAiCompatibleHeliconeApi.credentials.js"
+      "dist/credentials/OpenAiCompatibleHeliconeApi.credentials.js",
+      "dist/credentials/QdrantHeliconeApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/AiAgentLlmObs/AiAgentLlmObs.node.js",
       "dist/nodes/ToolQdrantSearchLangfuse/ToolQdrantSearchLangfuse.node.js",
       "dist/nodes/AiAgentPhoenix/AiAgentPhoenix.node.js",
       "dist/nodes/ToolQdrantSearchPhoenix/ToolQdrantSearchPhoenix.node.js",
-      "dist/nodes/AiAgentHelicone/AiAgentHelicone.node.js"
+      "dist/nodes/AiAgentHelicone/AiAgentHelicone.node.js",
+      "dist/nodes/ToolQdrantSearchHelicone/ToolQdrantSearchHelicone.node.js"
     ]
   },
   "dependencies": {
