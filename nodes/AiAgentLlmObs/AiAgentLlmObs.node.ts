@@ -6,6 +6,7 @@ import type {
 } from 'n8n-workflow';
 import { jsonParse, NodeOperationError } from 'n8n-workflow';
 import { CallbackHandler } from 'langfuse-langchain';
+import { Langfuse } from 'langfuse';
 import { ChatOpenAI } from '@langchain/openai';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Tool } from '@langchain/core/tools';
@@ -437,6 +438,13 @@ export class AiAgentLlmObs implements INodeType {
 				placeholder: 'Add Agent Option',
 				options: [
 					{
+						displayName: 'Hierarchical Spans Observability',
+						name: 'hierarchicalSpans',
+						type: 'boolean',
+						default: true,
+						description: 'Whether to enable hierarchical tracing with parent-child span relationships in Langfuse for better observability',
+					},
+					{
 						displayName: 'Max Iterations',
 						name: 'maxIterations',
 						type: 'number',
@@ -696,6 +704,7 @@ export class AiAgentLlmObs implements INodeType {
 
 				// Get agent options
 				const agentOptions = this.getNodeParameter('agentOptions', itemIndex, {}) as {
+					hierarchicalSpans?: boolean;
 					maxIterations?: number;
 					returnIntermediateSteps?: boolean;
 				};
@@ -734,20 +743,63 @@ export class AiAgentLlmObs implements INodeType {
 					? langfuseOptions.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
 					: undefined;
 
-				langfuseHandlerRef = new CallbackHandler({
-					baseUrl: credentials.langfuseBaseUrl as string,
-					publicKey: credentials.langfusePublicKey as string,
-					secretKey: credentials.langfuseSecretKey as string,
-					sessionId: langfuseOptions.sessionId || undefined,
-					userId: langfuseOptions.userId || undefined,
-					metadata: {
-						...customMetadata,
-						model: modelName,
-						provider: provider,
-						llmClass: llmClassName,
-					},
-					tags,
-				});
+				// Check if hierarchical spans are enabled (default: true)
+				const useHierarchicalSpans = agentOptions.hierarchicalSpans !== false;
+
+				// Initialize Langfuse based on hierarchical spans setting
+				let langfuseClient: Langfuse | undefined;
+				let parentTrace: any;
+
+				if (useHierarchicalSpans) {
+					// Hierarchical tracing - create root trace and manual child spans
+					langfuseClient = new Langfuse({
+						baseUrl: credentials.langfuseBaseUrl as string,
+						publicKey: credentials.langfusePublicKey as string,
+						secretKey: credentials.langfuseSecretKey as string,
+					});
+
+					// Create parent trace for the agent execution
+					const traceName = langfuseOptions.traceName || `AI Agent - ${llmClassName}`;
+					parentTrace = langfuseClient.trace({
+						name: traceName,
+						sessionId: langfuseOptions.sessionId || undefined,
+						userId: langfuseOptions.userId || undefined,
+						metadata: {
+							...customMetadata,
+							model: modelName,
+							provider: provider,
+							llmClass: llmClassName,
+							systemMessage: systemMessage?.substring(0, 200),
+							userMessage: userMessage?.substring(0, 200),
+						},
+						tags,
+						input: {
+							systemMessage,
+							userMessage,
+						},
+					});
+
+					// Create CallbackHandler with parent trace context
+					langfuseHandlerRef = new CallbackHandler({
+						root: parentTrace,
+					});
+				} else {
+					// Flat tracing - original behavior (multiple traces)
+					langfuseHandlerRef = new CallbackHandler({
+						baseUrl: credentials.langfuseBaseUrl as string,
+						publicKey: credentials.langfusePublicKey as string,
+						secretKey: credentials.langfuseSecretKey as string,
+						sessionId: langfuseOptions.sessionId || undefined,
+						userId: langfuseOptions.userId || undefined,
+						metadata: {
+							...customMetadata,
+							model: modelName,
+							provider: provider,
+							llmClass: llmClassName,
+						},
+						tags,
+					});
+				}
 
 				const langfuseCallbacks = [langfuseHandlerRef];
 
@@ -813,8 +865,8 @@ export class AiAgentLlmObs implements INodeType {
 					}
 				};
 
-				// Invoke options with Langfuse callbacks
-				const invokeOptions = { callbacks: langfuseCallbacks, runName: llmClassName };
+				// Track iteration count for output
+				let iterationCount = 0;
 
 				if (tools && tools.length > 0) {
 					const hasBindTools = typeof model.bindTools === 'function';
@@ -829,7 +881,52 @@ export class AiAgentLlmObs implements INodeType {
 
 					while (iterations < maxIterations) {
 						iterations++;
-						const aiResponse = await modelWithTools.invoke(currentMessages, invokeOptions);
+						iterationCount = iterations;
+
+						let aiResponse: any;
+
+						if (useHierarchicalSpans) {
+							// Create a span for this LLM iteration
+							const llmSpan = parentTrace.span({
+								name: `${llmClassName} - Iteration ${iterations}`,
+								input: currentMessages.map(m => ({
+									role: m._getType(),
+									content: typeof m.content === 'string' ? m.content.substring(0, 500) : m.content,
+								})),
+								metadata: {
+									iteration: iterations,
+									maxIterations,
+									model: modelName,
+								},
+							});
+
+							// Create handler for this specific LLM call
+							const llmHandler = new CallbackHandler({ root: llmSpan });
+							aiResponse = await modelWithTools.invoke(currentMessages, {
+								callbacks: [llmHandler],
+								runName: `${llmClassName} Call`,
+							});
+
+							const toolCalls = aiResponse.tool_calls || (aiResponse as any).additional_kwargs?.tool_calls;
+
+							// Update span with LLM output
+							llmSpan.update({
+								output: {
+									content: aiResponse.content,
+									toolCalls: toolCalls?.map((tc: any) => ({
+										name: tc.name || tc.function?.name,
+										args: tc.args || tc.function?.arguments,
+									})),
+								},
+							});
+							llmSpan.end();
+						} else {
+							// Flat tracing - use callbacks directly
+							aiResponse = await modelWithTools.invoke(currentMessages, {
+								callbacks: langfuseCallbacks,
+								runName: `${llmClassName} Call`,
+							});
+						}
 						currentMessages.push(aiResponse);
 
 						// Accumulate tokens from this LLM call
@@ -858,13 +955,80 @@ export class AiAgentLlmObs implements INodeType {
 
 							if (tool) {
 								try {
-									// Pass Langfuse callbacks to trace tool as separate span
-									const toolResult = await tool.invoke(toolArgs, {
-										callbacks: langfuseCallbacks,
-										runName: toolName,
-									});
+									let toolResult: any;
 
-									// Helper to extract pageContent from various formats
+									if (useHierarchicalSpans) {
+										// Create a span for this tool execution
+										const toolSpan = parentTrace.span({
+											name: `Tool: ${toolName}`,
+											input: toolArgs,
+											metadata: {
+												toolName,
+												iteration: iterations,
+												toolCallId: toolCallId,
+											},
+										});
+
+										// Create handler for this tool call
+										const toolHandler = new CallbackHandler({ root: toolSpan });
+										toolResult = await tool.invoke(toolArgs, {
+											callbacks: [toolHandler],
+											runName: toolName,
+										});
+
+										// Helper to extract pageContent from various formats
+										const extractContent = (data: any): string => {
+											// If it's a string, try to parse as JSON
+											if (typeof data === 'string') {
+												try {
+													const parsed = JSON.parse(data);
+													return extractContent(parsed);
+												} catch {
+													// Not JSON, return as-is
+													return data;
+												}
+											}
+
+											// If it's an array, extract from each item
+											if (Array.isArray(data)) {
+												return data.map((item: any) => extractContent(item)).join('\n\n---\n\n');
+											}
+
+											// If it has pageContent directly
+											if (data?.pageContent) {
+												return data.pageContent;
+											}
+
+											// If it has text property (content block format)
+											if (data?.text) {
+												return extractContent(data.text);
+											}
+
+											// If it has content array
+											if (data?.content && Array.isArray(data.content)) {
+												return data.content.map((item: any) => extractContent(item)).join('\n\n---\n\n');
+											}
+
+											// Fallback: stringify if object
+											return typeof data === 'object' ? JSON.stringify(data) : String(data);
+										};
+
+										const formattedResult = extractContent(toolResult);
+
+										// Update tool span with result
+										toolSpan.update({
+											output: formattedResult,
+										});
+										toolSpan.end();
+									} else {
+										// Flat tracing - pass Langfuse callbacks to trace tool as separate span
+										toolResult = await tool.invoke(toolArgs, {
+											callbacks: langfuseCallbacks,
+											runName: toolName,
+										});
+									}
+
+									// Helper to extract pageContent from various formats (for flat tracing)
 									const extractContent = (data: any): string => {
 										// If it's a string, try to parse as JSON
 										if (typeof data === 'string') {
@@ -914,6 +1078,7 @@ export class AiAgentLlmObs implements INodeType {
 									}));
 								} catch (error: any) {
 									const errorMessage = `Error: ${error.message}`;
+
 									intermediateSteps.push({
 										action: { tool: toolName, toolInput: toolArgs },
 										observation: errorMessage,
@@ -927,6 +1092,23 @@ export class AiAgentLlmObs implements INodeType {
 							} else {
 								// Tool not found - still need to respond to the tool_call
 								const errorMessage = `Tool "${toolName}" not found`;
+
+								if (useHierarchicalSpans) {
+									// Create a span for the missing tool
+									const errorSpan = parentTrace.span({
+										name: `Tool: ${toolName} (Not Found)`,
+										input: toolArgs,
+										output: errorMessage,
+										level: 'WARNING' as any,
+										metadata: {
+											toolName,
+											iteration: iterations,
+											error: 'Tool not found',
+										},
+									});
+									errorSpan.end();
+								}
+
 								intermediateSteps.push({
 									action: { tool: toolName, toolInput: toolArgs },
 									observation: errorMessage,
@@ -948,7 +1130,41 @@ export class AiAgentLlmObs implements INodeType {
 						response = currentMessages[currentMessages.length - 1];
 					}
 				} else {
-					response = await model.invoke(messages, invokeOptions);
+					// No tools - single LLM call
+					if (useHierarchicalSpans) {
+						const llmSpan = parentTrace.span({
+							name: `${llmClassName} - Single Call`,
+							input: messages.map(m => ({
+								role: m._getType(),
+								content: typeof m.content === 'string' ? m.content.substring(0, 500) : m.content,
+							})),
+							metadata: {
+								model: modelName,
+								hasTools: false,
+							},
+						});
+
+						const llmHandler = new CallbackHandler({ root: llmSpan });
+						response = await model.invoke(messages, {
+							callbacks: [llmHandler],
+							runName: `${llmClassName} Call`,
+						});
+
+						// Update span with output
+						llmSpan.update({
+							output: {
+								content: response.content,
+							},
+						});
+						llmSpan.end();
+					} else {
+						// Flat tracing
+						response = await model.invoke(messages, {
+							callbacks: langfuseCallbacks,
+							runName: `${llmClassName} Call`,
+						});
+					}
+
 					// Accumulate tokens from single LLM call
 					accumulateTokenUsage(response);
 				}
@@ -1003,12 +1219,33 @@ export class AiAgentLlmObs implements INodeType {
 					outputJson.tokenUsage = tokenUsage;
 				}
 
+				// Update parent trace with final output and token usage (only for hierarchical spans)
+				if (useHierarchicalSpans) {
+					parentTrace.update({
+						output: {
+							response: outputContent,
+							intermediateStepsCount: intermediateSteps.length,
+							iterations: iterationCount,
+							tokenUsage,
+						},
+					});
+				}
+
 				// Flush Langfuse to ensure traces are sent
 				if (langfuseHandlerRef) {
 					try {
 						await langfuseHandlerRef.flushAsync();
 					} catch {
 						// Ignore flush errors - traces may still be sent
+					}
+				}
+
+				// Flush Langfuse client (only for hierarchical spans)
+				if (useHierarchicalSpans && langfuseClient) {
+					try {
+						await langfuseClient.flushAsync();
+					} catch {
+						// Ignore flush errors
 					}
 				}
 
